@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility }) => {
+const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility, onRemoveLayer, onForceRender }) => {
     const [newEntity, setNewEntity] = useState('');
 
     const handleAddEntity = () => {
@@ -14,16 +14,24 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility 
         <div className="layer-controls">
             <div className="justify-content-between align-items-center mb-2">
                 <div className="row mt-2 mb-2">
-                    <h5 className="col-10">{layer.name}</h5>
-                    <button className="btn btn-secondary btn-sm col-2" onClick={() => onToggleVisibility(layer.id)}>
+                    <h5 className="col-12">{layer.name}</h5>
+                </div>
+                <div className="row mt-2 mb-2">
+                    <button className="btn btn-secondary btn-sm col-4" onClick={() => onToggleVisibility(layer.id)}>
                         {layer.visible ? 'Hide' : 'Show'}
+                    </button>
+                    <button className="btn btn-danger btn-sm col-4" onClick={() => onRemoveLayer(layer.id)}>
+                        &times;
+                    </button>
+                    <button className="btn btn-secondary btn-sm col-4" onClick={() => onForceRender(layer.id)}>
+                        Reload
                     </button>
                 </div>
                 <div className="row mx-2">
                     <input
                     className="col-sm-12"
                     type="text"
-                    placeholder={`Add ${layer.type}`}
+                    placeholder={`Add entity`}
                     value={newEntity}
                     onChange={(e) => setNewEntity(e.target.value)}
                     onKeyPress={(e) => {

@@ -44,16 +44,35 @@ function App() {
         setLayers([...layers, newLayer]);
     };
 
-    //const handleForceRender = () => {
-    //    setCountries([]);
+    const handleRemoveLayer = (layerId) => {
+        setLayers(prevLayers => prevLayers.filter(layer => layer.id !== layerId));
+    };
 
-    //    // Re-add countries one by one with a slight delay
-    //    countries.forEach((country, index) => {
-    //        setTimeout(() => {
-    //            setCountries(prevCountries => [...prevCountries, country]);
-    //        }, index * 3000); // 300ms delay between each addition
-    //    });
-    //};
+    const handleForceRender = (layerId) => {
+        setLayers(prevLayers => {
+            const layer = prevLayers.find(l => l.id === layerId);
+            const otherLayers = prevLayers.filter(l => l.id !== layerId);
+
+            return [
+                ...otherLayers,
+                {
+                    ...layer,
+                    entities: [],
+                },
+            ];
+        });
+
+        const layer = layers.find(l => l.id === layerId);
+        layer.entities.forEach((entity, index) => {
+            setTimeout(() => {
+                setLayers(prevLayers =>
+                    prevLayers.map(l =>
+                        l.id === layerId ? { ...l, entities: [...l.entities, entity] } : l
+                    )
+                );
+            }, 5000); // 300ms delay between each addition
+        });
+    };
 
     return (
         <div className="container-fluid">
@@ -65,6 +84,8 @@ function App() {
                         onRemoveEntity={removeEntityFromLayer}
                         onToggleLayerVisibility={toggleLayerVisibility}
                         onAddLayer={addNewLayer}
+                        onRemoveLayer={handleRemoveLayer}
+                        onForceRender={handleForceRender}
                     />
                 </div>
                 <div className="col-md-9 col-sm-12" style={{ height: "100vh" }}>
