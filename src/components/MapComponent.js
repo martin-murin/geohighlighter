@@ -3,7 +3,7 @@ import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import MapLayer from './MapLayer'; // Import the new MapLayer component
 
-const MapComponent = ({ countries }) => {
+const MapComponent = ({ countries, layersVisible }) => {
     return (
         <MapContainer
             center={[20, 0]}
@@ -14,7 +14,7 @@ const MapComponent = ({ countries }) => {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution="&copy; OpenStreetMap contributors"
             />
-            <MapLayer countries={countries} /> {/* Add MapLayer here */}
+            <MapLayer countries={countries} layersVisible={layersVisible} /> {/* Add MapLayer here */}
         </MapContainer>
     );
 };
