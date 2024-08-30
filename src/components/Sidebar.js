@@ -8,13 +8,13 @@ const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onToggleLayerVisibility,
 
     const handleAddNewLayer = () => {
         if (newLayerName.trim()) {
-            onAddLayer(newLayerName, newLayerType);
+            onAddLayer(newLayerName);
             setNewLayerName('');
         }
     };
 
     return (
-        <div className="sidebar bg-light p-3">
+        <div className="sidebar p-2">
             <h2>Layers</h2>
             {layers.map(layer => (
                 <LayerControls
@@ -27,20 +27,18 @@ const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onToggleLayerVisibility,
             ))}
             <div className="new-layer mt-4">
                 <h3>Add New Layer</h3>
-                <Form>
-                    <Form.Group controlId="formLayerName">
-                        <InputGroup className="mb-3">
-                            <FormControl
-                                placeholder="Layer Name"
-                                value={newLayerName}
-                                onChange={(e) => setNewLayerName(e.target.value)}
-                            />
-                        </InputGroup>
-                    </Form.Group>
-                    <Button variant="primary" className="mt-3" onClick={handleAddNewLayer}>
-                        Add Layer
-                    </Button>
-                </Form>
+                    <input
+                    className="col-12"
+                    type="text"
+                    placeholder={`LaAyer Name`}
+                    value={newLayerName}
+                    onChange={(e) => setNewLayerName(e.target.value)}
+                    onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                            handleAddNewLayer();
+                        }
+                    }}
+                    />
             </div>
         </div>
     );

@@ -34,7 +34,7 @@ function App() {
         ));
     };
 
-    const addNewLayer = (name, type) => {
+    const addNewLayer = (name) => {
         const newLayer = {
             id: Date.now(),
             name,
@@ -64,7 +64,7 @@ function App() {
                         onAddEntity={addEntityToLayer}
                         onRemoveEntity={removeEntityFromLayer}
                         onToggleLayerVisibility={toggleLayerVisibility}
-                        onAddNewLayer={addNewLayer}
+                        onAddLayer={addNewLayer}
                     />
                 </div>
                 <div className="col-md-9 col-sm-12" style={{ height: "100vh" }}>
