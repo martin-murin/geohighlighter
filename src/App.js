@@ -48,6 +48,21 @@ function App() {
         setLayers(prevLayers => prevLayers.filter(layer => layer.id !== layerId));
     };
 
+    const handleEntityError = (layerId, entity) => {
+        // Prevent adding the entity to the list if there's an error
+        setLayers(prevLayers => {
+            return prevLayers.map(layer => {
+                if (layer.id === layerId) {
+                    return {
+                        ...layer,
+                        entities: layer.entities.filter(e => e !== entity),
+                    };
+                }
+                return layer;
+            });
+        });
+    };
+
     const handleForceRender = (layerId) => {
         setLayers(prevLayers => {
             const layer = prevLayers.find(l => l.id === layerId);
@@ -89,7 +104,7 @@ function App() {
                     />
                 </div>
                 <div className="col-md-9 col-sm-12" style={{ height: "100vh" }}>
-                    <MapComponent layers={layers} />
+                    <MapComponent layers={layers} handleEntityError={handleEntityError} />
                 </div>
             </div>
         </div>

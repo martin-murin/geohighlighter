@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 
@@ -31,17 +31,18 @@ const fetchDataForEntity = async (type, entity, controller) => {
 };
 
 // MapLayer component
-const MapLayer = ({ entities, type, visible }) => {
+const MapLayer = ({ entities, type, visible, onEntityError }) => {
     const map = useMap();
     const layersRef = useRef({});
     const osmIdSetRef = useRef(new Set()); // Set to track osm_ids to prevent duplicates
     const controllerRef = useRef(new AbortController()); // AbortController reference
+    const [warning, setWarning] = useState(null);
 
     // Cleanup layers on unmount
     useEffect(() => {
         return () => {
             Object.values(layersRef.current).forEach(layer => {
-                map.removeLayer(layer);
+                map.removeLayer(layer.layer);
             });
             layersRef.current = {};
             osmIdSetRef.current.clear();
@@ -80,7 +81,8 @@ const MapLayer = ({ entities, type, visible }) => {
                             
                             // Prevent adding the same osm_id twice
                             if (osmIdSetRef.current.has(osmId)) {
-                                console.log(`Entity with osm_id ${osmId} is already added.`);
+                                setWarning(`Entity with OSM ID ${osmId} is already added.`);
+                                onEntityError(entity); // Trigger error callback
                                 return;
                             }
 
@@ -102,10 +104,15 @@ const MapLayer = ({ entities, type, visible }) => {
 
                             osmIdSetRef.current.add(osmId);
                             geoJsonLayer.addTo(map);
+                        } else {
+                            setWarning(`Entity "${entity}" not found.`);
+                            onEntityError(entity); // Trigger error callback
                         }
                     } catch (error) {
                         if (error.name !== 'AbortError') {
                             console.error(`Error fetching data for ${entity}:`, error);
+                            setWarning(`Error fetching data for "${entity}".`);
+                            onEntityError(entity); // Trigger error callback
                         }
                     }
                 } else {
@@ -124,7 +131,22 @@ const MapLayer = ({ entities, type, visible }) => {
         updateLayers(); // Call the debounced function
     }, [entities, map, visible]);
 
-    return null; // This component does not render anything visible
+    useEffect(() => {
+        if (warning) {
+            const timer = setTimeout(() => setWarning(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [warning]);
+
+    return (
+        <>
+            {warning && (
+                <div className="alert alert-warning" style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 1000 }}>
+                    {warning}
+                </div>
+            )}
+        </>
+    );
 };
 
 export default MapLayer;

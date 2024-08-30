@@ -3,7 +3,7 @@ import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import MapLayer from './MapLayer'; // Import the new MapLayer component
 
-const MapComponent = ({ layers }) => {
+const MapComponent = ({ layers, handleEntityError }) => {
     return (
         <MapContainer
             center={[20, 0]}
@@ -15,7 +15,13 @@ const MapComponent = ({ layers }) => {
                 attribution="&copy; OpenStreetMap contributors"
             />
             {layers.map((layer, index) => (
-                    <MapLayer key={index} type={layer.type} entities={layer.entities} visible={layer.visible} />
+                    <MapLayer
+                        key={index}
+                        type={layer.type}
+                        entities={layer.entities}
+                        visible={layer.visible}
+                        onEntityError={(entity) => handleEntityError(layer.id, entity)}
+                    />
                 ))}
         </MapContainer>
     );
