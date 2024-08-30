@@ -15,13 +15,23 @@ function debounce(fn, delay) {
     };
 }
 
-const MapLayer = ({ countries, layersVisible }) => {
+const fetchDataForEntity = async (type, entity) => {
+    const url = generateUrl(type, entity);
+    const response = await fetch(url);
+    return await response.json();
+};
+
+const generateUrl = (type, entity) => {
+            return `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(entity)}&format=geojson&polygon_geojson=1`;
+};
+
+const MapLayer = ({ entities, type, visible }) => {
     const map = useMap();
     const layersRef = useRef({});
     const controllerRef = useRef(null); // AbortController reference
 
     const updateLayers = debounce(() => {
-        console.log('Debounced update running with countries:', countries);
+        console.log('Debounced update running with countries:', entities);
 
         if (!map) {
             console.log('Map instance is not available.');
@@ -29,31 +39,18 @@ const MapLayer = ({ countries, layersVisible }) => {
         }
 
         // Remove layers for countries that are no longer in the list
-        Object.keys(layersRef.current).forEach(countryName => {
-            if (!countries.includes(countryName)) {
-                map.removeLayer(layersRef.current[countryName]);
-                delete layersRef.current[countryName];
+        Object.keys(layersRef.current).forEach(entity => {
+            if (!entities.includes(entity)) {
+                map.removeLayer(layersRef.current[entity]);
+                delete layersRef.current[entity];
             }
         });
 
-        // Add layers for new countries
-        countries.forEach(async (countryName) => {
-            if (!layersRef.current[countryName]) {
-                console.log(`Adding layer for country: ${countryName}`);
-                const url = `https://nominatim.openstreetmap.org/search?country=${encodeURIComponent(countryName)}&format=geojson&polygon_geojson=1`;
-
-                if (controllerRef.current) {
-                    controllerRef.current.abort(); // Cancel any ongoing request
-                }
-                controllerRef.current = new AbortController();
-                const signal = controllerRef.current.signal;
-
-                try {
-                    const response = await fetch(url, { signal });
-                    console.log(`Fetching data from: ${url}`);
-                    const data = await response.json();
-
-                    if (data.features && data.features.length > 0) {
+         if (visible) {
+            entities.forEach(async (entity) => {
+                if (!layersRef.current[entity]) {
+                    try {
+                        const data = await fetchDataForEntity(type, entity);
                         const geoJsonLayer = L.geoJson(data, {
                             style: {
                                 fillColor: '#5500FF',
@@ -62,42 +59,27 @@ const MapLayer = ({ countries, layersVisible }) => {
                                 color: 'white',
                                 fillOpacity: 0.2
                             }
-                        }).addTo(map);
-
-                        layersRef.current[countryName] = geoJsonLayer;
-                        if (layersVisible) {
-                            geoJsonLayer.addTo(map);
-                            map.fitBounds(geoJsonLayer.getBounds());
-                        }
-                        console.log(`Layer added for country: ${countryName}`);
-                    } else {
-                        console.warn(`Country "${countryName}" not found or no features available.`);
-                        alert(`Country "${countryName}" not found or no features available.`);
+                        });
+                        layersRef.current[entity] = geoJsonLayer;
+                        geoJsonLayer.addTo(map);
+                    } catch (error) {
+                        console.error(`Error fetching data for ${entity}:`, error);
                     }
-                } catch (error) {
-                    if (error.name === 'AbortError') {
-                        console.log(`Fetch for ${countryName} was aborted.`);
-                    } else {
-                        console.error("Error fetching country data:", error);
-                        alert(`Error fetching data for "${countryName}".`);
-                    }
+                } else {
+                    layersRef.current[entity].addTo(map);
                 }
-            }
-            else if (layersVisible) {
-                // Add existing layers to map if visibility is toggled on
-                layersRef.current[countryName].addTo(map);
-            }
-        });
-        if (!layersVisible) {
+            });
+        } else {
             Object.values(layersRef.current).forEach(layer => {
                 map.removeLayer(layer);
             });
         }
+
     }, 300); // Debounce delay in milliseconds
 
     useEffect(() => {
         updateLayers(); // Call the debounced function
-    }, [countries, map, layersVisible]);
+    }, [entities, map, visible]);
 
     return null; // This component does not render anything visible
 };
