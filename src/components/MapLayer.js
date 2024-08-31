@@ -31,7 +31,7 @@ const fetchDataForEntity = async (type, entity, controller) => {
 };
 
 // MapLayer component
-const MapLayer = ({ entities, type, visible, onEntityError }) => {
+const MapLayer = ({ entities, type, visible, onEntityError, color }) => {
     const map = useMap();
     const layersRef = useRef({});
     const osmIdSetRef = useRef(new Set()); // Set to track osm_ids to prevent duplicates
@@ -48,6 +48,17 @@ const MapLayer = ({ entities, type, visible, onEntityError }) => {
             osmIdSetRef.current.clear();
         };
     }, [map]);
+
+    const updateLayerColors = () => {
+        Object.keys(layersRef.current).forEach(entity => {
+            const layer = layersRef.current[entity].layer;
+            layer.setStyle({
+                fillColor: color,
+                color: 'white', // Boundary color
+                fillOpacity: 0.2,
+            });
+        });
+    };
 
     const updateLayers = debounce(() => {
         console.log('Debounced update running with entities:', entities);
@@ -88,7 +99,7 @@ const MapLayer = ({ entities, type, visible, onEntityError }) => {
 
                             const geoJsonLayer = L.geoJson(data, {
                                 style: {
-                                    fillColor: '#5500FF',
+                                    fillColor: color,
                                     weight: 2,
                                     opacity: 1,
                                     color: 'white',
@@ -130,6 +141,10 @@ const MapLayer = ({ entities, type, visible, onEntityError }) => {
     useEffect(() => {
         updateLayers(); // Call the debounced function
     }, [entities, map, visible]);
+
+    useEffect(() => {
+        updateLayerColors(); // Update layer colors when color changes
+    }, [color]);
 
     useEffect(() => {
         if (warning) {

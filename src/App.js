@@ -5,7 +5,7 @@ import MapComponent from './components/MapComponent';
 
 function App() {
     const [layers, setLayers] = useState([
-        { id: 1, name: 'Default Layer', type: 'country', entities: [], visible: true }
+        { id: 1, name: 'Default Layer', type: 'country', entities: [], visible: true, color: '#5500FF' }
     ]);
     //const [countries, setCountries] = useState([]);
     //const [layersVisible, setLayersVisible] = useState(true);
@@ -40,6 +40,7 @@ function App() {
             name,
             entities: [],
             visible: true,
+            color: '#5500FF',
         };
         setLayers([...layers, newLayer]);
     };
@@ -89,6 +90,14 @@ function App() {
         });
     };
 
+    const handleColorChange = (layerId, color) => {
+        setLayers(prevLayers =>
+            prevLayers.map(layer =>
+                layer.id === layerId ? { ...layer, color } : layer
+            )
+        );
+    };
+
     return (
         <div className="container-fluid">
             <div className="row">
@@ -101,6 +110,7 @@ function App() {
                         onAddLayer={addNewLayer}
                         onRemoveLayer={handleRemoveLayer}
                         onForceRender={handleForceRender}
+                        onColorChange={handleColorChange}
                     />
                 </div>
                 <div className="col-md-9 col-sm-12" style={{ height: "100vh" }}>

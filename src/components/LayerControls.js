@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import ColorPicker from './ColorPicker';
 
-const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility, onRemoveLayer, onForceRender }) => {
+const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility, onRemoveLayer, onForceRender, onColorChange }) => {
     const [newEntity, setNewEntity] = useState('');
+    const [currentColor, setCurrentColor] = useState('#5500FF');
 
     const handleAddEntity = () => {
         if (newEntity) {
@@ -10,26 +12,38 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility,
         }
     };
 
+    const handleColorChange = (colorHex) => {
+        setCurrentColor(colorHex);
+        console.log("setting color to", colorHex);
+        onColorChange(layer.id, colorHex);
+    };
+
     return (
         <div className="layer-controls">
             <div className="justify-content-between align-items-center mb-2">
-                <div className="row mt-2 mb-2">
-                    <h5 className="col-12">{layer.name}</h5>
-                </div>
-                <div className="row mt-2 mb-2">
-                    <button className="btn btn-secondary btn-sm col-4" onClick={() => onToggleVisibility(layer.id)}>
-                        {layer.visible ? 'Hide' : 'Show'}
-                    </button>
-                    <button className="btn btn-danger btn-sm col-4" onClick={() => onRemoveLayer(layer.id)}>
-                        &times;
-                    </button>
-                    <button className="btn btn-secondary btn-sm col-4" onClick={() => onForceRender(layer.id)}>
-                        Reload
-                    </button>
+                <div className="row mt-2 mb-2 mx-2">
+                    <div className="col-12 col-md-3 mb-2 mb-md-0">
+                        <ColorPicker onChange={handleColorChange} />
+                    </div>
+                    <div className="col-12 col-md-3 mb-2 mb-md-0">
+                        <button className="btn btn-secondary btn-sm w-100" onClick={() => onToggleVisibility(layer.id)}>
+                            {layer.visible ? 'Hide' : 'Show'}
+                        </button>
+                    </div>
+                    <div className="col-12 col-md-3 mb-2 mb-md-0">
+                        <button className="btn btn-danger btn-sm w-100" onClick={() => onRemoveLayer(layer.id)}>
+                            &times;
+                        </button>
+                    </div>
+                    <div className="col-12 col-md-3 mb-2 mb-md-0">
+                        <button className="btn btn-secondary btn-sm w-100" onClick={() => onForceRender(layer.id)}>
+                            Reload
+                        </button>
+                    </div>
                 </div>
                 <div className="row mx-2">
                     <input
-                    className="col-sm-12"
+                    className="form-control col-12"
                     type="text"
                     placeholder={`Add entity`}
                     value={newEntity}

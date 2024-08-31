@@ -20,6 +20,7 @@ const MapComponent = ({ layers, handleEntityError }) => {
                         type={layer.type}
                         entities={layer.entities}
                         visible={layer.visible}
+                        color={layer.color}
                         onEntityError={(entity) => handleEntityError(layer.id, entity)}
                     />
                 ))}
