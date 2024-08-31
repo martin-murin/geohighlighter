@@ -61,14 +61,16 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility,
             </div>
 
             <ul className="list-group">
-                {layer.entities.map((entity, index) => (
-                    <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
-                        {entity}
-                        <button className="btn btn-danger btn-sm" onClick={() => onRemoveEntity(layer.id, entity)}>
-                            &times;
-                        </button>
-                    </li>
-                ))}
+              {layer.entities.map((entity, index) => (
+                <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
+                  {layer.entityNames && layer.entityNames[entity]
+                    ? layer.entityNames[entity]  // Display the name if it exists
+                    : "Loading..."}
+                  <button className="btn btn-danger btn-sm" onClick={() => onRemoveEntity(layer.id, entity)}>
+                    &times;
+                  </button>
+                </li>
+              ))}
             </ul>
         </div>
     );

@@ -6,7 +6,7 @@ import MapComponent from './components/MapComponent';
 
 function App() {
     const [layers, setLayers] = useState([
-        { id: 1, name: 'Default Layer', type: 'country', entities: [], visible: true, color: {rgb: { r: 85, g: 0, b: 255, a: 0.2,}, hex: "#5500FF"} }
+        { id: 1, name: 'Default Layer', type: 'country', entities: [], entityNames: {}, visible: true, color: {rgb: { r: 85, g: 0, b: 255, a: 0.2,}, hex: "#5500FF"} }
     ]);
     //const [countries, setCountries] = useState([]);
     //const [layersVisible, setLayersVisible] = useState(true);
@@ -99,6 +99,22 @@ function App() {
         );
     };
 
+    const handleUpdateEntityName = (layerId, entity, name) => {
+        console.log("Received call in App.js, update entity name with ", name)
+        setLayers(prevLayers => prevLayers.map(layer => {
+            if (layer.id === layerId) {
+                return {
+                    ...layer,
+                    entityNames: {
+                        ...layer.entityNames,
+                        [entity]: name
+                    }
+                };
+            }
+            return layer;
+        }));
+    };
+
     return (
         <div className="container-fluid">
             <div className="row">
@@ -115,7 +131,7 @@ function App() {
                     />
                 </div>
                 <div className="col-md-9 col-sm-12" style={{ height: "100vh" }}>
-                    <MapComponent layers={layers} handleEntityError={handleEntityError} />
+                    <MapComponent layers={layers} handleEntityError={handleEntityError} handleUpdateEntityName={handleUpdateEntityName} />
                 </div>
             </div>
         </div>

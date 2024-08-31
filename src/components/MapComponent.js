@@ -3,7 +3,7 @@ import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import MapLayer from './MapLayer'; // Import the new MapLayer component
 
-const MapComponent = ({ layers, handleEntityError }) => {
+const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName }) => {
     return (
         <MapContainer
             center={[20, 0]}
@@ -22,6 +22,7 @@ const MapComponent = ({ layers, handleEntityError }) => {
                         visible={layer.visible}
                         color={layer.color}
                         onEntityError={(entity) => handleEntityError(layer.id, entity)}
+                        onUpdateEntityName={(entity, name) => handleUpdateEntityName(layer.id, entity, name)}
                     />
                 ))}
         </MapContainer>

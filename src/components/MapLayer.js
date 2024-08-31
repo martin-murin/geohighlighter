@@ -17,21 +17,37 @@ function debounce(fn, delay) {
 
 // Function to generate the API URL
 const generateUrl = (type, entity) => {
-    return `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(entity)}&format=geojson&polygon_geojson=1`;
+    // Check if the entity matches the OSM ID format
+    const osmIdPattern = /^[n|w|r|s|m|t|b|a|p|l]\d+$/i;
+    if (osmIdPattern.test(entity)) {
+        return `https://nominatim.openstreetmap.org/lookup?osm_ids=${entity}&format=geojson&polygon_geojson=1`;
+    } else {
+        return `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(entity)}&format=geojson&polygon_geojson=1`;
+    }
 };
 
 // Function to fetch data for an entity
-const fetchDataForEntity = async (type, entity, controller) => {
+const fetchDataForEntity = async (type, entity) => {
     const url = generateUrl(type, entity);
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) {
-        throw new Error(`Failed to fetch data for ${entity}`);
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        // Extract the name from the response
+        const name = data?.features?.[0]?.properties?.name || data?.features?.[0]?.properties?.display_name || 'Unknown';
+
+        return { data, name };
+    } catch (error) {
+        console.error(`Error fetching data for ${entity}:`, error);
+        throw error;
     }
-    return await response.json();
 };
 
 // MapLayer component
-const MapLayer = ({ entities, type, visible, onEntityError, color }) => {
+const MapLayer = ({ entities, type, visible, onEntityError, color, onUpdateEntityName }) => {
     const map = useMap();
     const layersRef = useRef({});
     const osmIdSetRef = useRef(new Set()); // Set to track osm_ids to prevent duplicates
@@ -85,7 +101,9 @@ const MapLayer = ({ entities, type, visible, onEntityError, color }) => {
             entities.forEach(async (entity) => {
                 if (!layersRef.current[entity]) {
                     try {
-                        const data = await fetchDataForEntity(type, entity, controllerRef.current);
+                        const result = await fetchDataForEntity(type, entity, controllerRef.current);
+                        const { data, name } = result;
+                        console.log(name)
                         
                         if (data && data.features.length > 0) {
                             const osmId = data.features[0].properties.osm_id;
@@ -112,10 +130,15 @@ const MapLayer = ({ entities, type, visible, onEntityError, color }) => {
                             layersRef.current[entity] = {
                                 layer: geoJsonLayer,
                                 osm_id: osmId,
+                                name: name,
                             };
 
                             osmIdSetRef.current.add(osmId);
                             geoJsonLayer.addTo(map);
+                            
+                            console.log("Calling from MapLayer with name = ", name)
+                            onUpdateEntityName(entity, name);
+
                         } else {
                             setWarning(`Entity "${entity}" not found.`);
                             onEntityError(entity); // Trigger error callback
