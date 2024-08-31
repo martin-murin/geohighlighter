@@ -22,6 +22,9 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility,
         <div className="layer-controls">
             <div className="justify-content-between align-items-center mb-2">
                 <div className="row mt-2 mb-2 mx-2">
+                    <div className="row mt-4">
+                        <h5 className="col-12">{layer.name}</h5>
+                    </div>
                     <div className="col-12 col-md-3 mb-2 mb-md-0">
                         <ColorPicker onChange={handleColorChange} />
                     </div>
