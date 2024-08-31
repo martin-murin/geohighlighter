@@ -40,7 +40,7 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility,
                     </div>
                     <div className="col-12 col-md-3 mb-2 mb-md-0">
                         <button className="btn btn-secondary btn-sm w-100" onClick={() => onForceRender(layer.id)}>
-                            Reload
+                            <i className="bi bi-arrow-clockwise"></i>
                         </button>
                     </div>
                 </div>
