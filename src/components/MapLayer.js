@@ -47,7 +47,7 @@ const fetchDataForEntity = async (type, entity) => {
 };
 
 // MapLayer component
-const MapLayer = ({ entities, type, visible, onEntityError, color, onUpdateEntityName }) => {
+const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderColor, onUpdateEntityName }) => {
     const map = useMap();
     const layersRef = useRef({});
     const osmIdSetRef = useRef(new Set()); // Set to track osm_ids to prevent duplicates
@@ -65,13 +65,22 @@ const MapLayer = ({ entities, type, visible, onEntityError, color, onUpdateEntit
         };
     }, [map]);
 
-    const updateLayerColors = () => {
+    const updateLayerFillColors = () => {
         Object.keys(layersRef.current).forEach(entity => {
             const layer = layersRef.current[entity].layer;
             layer.setStyle({
-                fillColor: color.hex,
-                color: 'white', // Boundary color
-                fillOpacity: color.rgb.a,
+                fillColor: fillColor.hex,
+                fillOpacity: fillColor.rgb.a,
+            });
+        });
+    };
+
+    const updateLayerBorderColors = () => {
+        Object.keys(layersRef.current).forEach(entity => {
+            const layer = layersRef.current[entity].layer;
+            layer.setStyle({
+                color: borderColor.hex,
+                opacity: borderColor.rgb.a,
             });
         });
     };
@@ -114,15 +123,16 @@ const MapLayer = ({ entities, type, visible, onEntityError, color, onUpdateEntit
                                 onEntityError(entity); // Trigger error callback
                                 return;
                             }
-                            console.log(color)
+                            console.log(fillColor)
+                            console.log(borderColor)
 
                             const geoJsonLayer = L.geoJson(data, {
                                 style: {
-                                    fillColor: color.hex,
+                                    fillColor: fillColor.hex,
+                                    fillOpacity: fillColor.rgb.a,
+                                    color: borderColor.hex,
+                                    opacity: borderColor.rgb.a,
                                     weight: 2,
-                                    opacity: 1,
-                                    color: 'white',
-                                    fillOpacity: color.rgb.a
                                 }
                             });
 
@@ -167,8 +177,12 @@ const MapLayer = ({ entities, type, visible, onEntityError, color, onUpdateEntit
     }, [entities, map, visible]);
 
     useEffect(() => {
-        updateLayerColors(); // Update layer colors when color changes
-    }, [color]);
+        updateLayerFillColors(); // Update layer colors when color changes
+    }, [fillColor]);
+
+    useEffect(() => {
+        updateLayerBorderColors(); // Update layer colors when color changes
+    }, [borderColor]);
 
     useEffect(() => {
         if (warning) {

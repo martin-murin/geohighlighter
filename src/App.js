@@ -6,7 +6,7 @@ import MapComponent from './components/MapComponent';
 
 function App() {
     const [layers, setLayers] = useState([
-        { id: 1, name: 'Default Layer', type: 'country', entities: [], entityNames: {}, visible: true, color: {rgb: { r: 85, g: 0, b: 255, a: 0.2,}, hex: "#5500FF"} }
+        { id: 1, name: 'Default Layer', type: 'country', entities: [], entityNames: {}, visible: true, fillColor: {rgb: { r: 0, g: 0, b: 0, a: 0.2,}, hex: "#000000"}, borderColor: {rgb: { r: 0, g: 0, b: 0, a: 0.8 }, hex: "#000000"} }
     ]);
     //const [countries, setCountries] = useState([]);
     //const [layersVisible, setLayersVisible] = useState(true);
@@ -41,7 +41,8 @@ function App() {
             name,
             entities: [],
             visible: true,
-            color: {rgb: { r: 85, g: 0, b: 255, a: 0.2,}, hex: "#5500FF"} ,
+            fillColor: {rgb: { r: 0, g: 0, b: 0, a: 0.2,}, hex: "#000000"} ,
+            borderColor: {rgb: { r: 0, g: 0, b: 0, a: 0.8,}, hex: "#000000"} ,
         };
         setLayers([...layers, newLayer]);
     };
@@ -91,10 +92,18 @@ function App() {
         });
     };
 
-    const handleColorChange = (layerId, color) => {
+    const handleFillColorChange = (layerId, fillColor) => {
         setLayers(prevLayers =>
             prevLayers.map(layer =>
-                layer.id === layerId ? { ...layer, color } : layer
+                layer.id === layerId ? { ...layer, fillColor } : layer
+            )
+        );
+    };
+
+    const handleBorderColorChange = (layerId, borderColor) => {
+        setLayers(prevLayers =>
+            prevLayers.map(layer =>
+                layer.id === layerId ? { ...layer, borderColor } : layer
             )
         );
     };
@@ -127,7 +136,8 @@ function App() {
                         onAddLayer={addNewLayer}
                         onRemoveLayer={handleRemoveLayer}
                         onForceRender={handleForceRender}
-                        onColorChange={handleColorChange}
+                        onFillColorChange={handleFillColorChange}
+                        onBorderColorChange={handleBorderColorChange}
                     />
                 </div>
                 <div className="col-md-9 col-sm-12" style={{ height: "100vh" }}>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import LayerControls from './LayerControls'; // Assuming you have a separate component for layer controls
 import { Button, Form, FormControl, InputGroup, Dropdown } from 'react-bootstrap';
 
-const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onToggleLayerVisibility, onAddLayer, onRemoveLayer, onForceRender, onColorChange}) => {
+const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onToggleLayerVisibility, onAddLayer, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange}) => {
     const [newLayerName, setNewLayerName] = useState('');
     const [newLayerType, setNewLayerType] = useState('country');
 
@@ -26,7 +26,8 @@ const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onToggleLayerVisibility,
                         onToggleVisibility={onToggleLayerVisibility}
                         onRemoveLayer={onRemoveLayer}
                         onForceRender={onForceRender}
-                        onColorChange={onColorChange}
+                        onFillColorChange={onFillColorChange}
+                        onBorderColorChange={onBorderColorChange}
                     />
                 ))}
                 <div className="new-layer mt-4 mb-4 mx-2">

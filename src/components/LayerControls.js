@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import ColorPicker from './ColorPicker';
 
-const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility, onRemoveLayer, onForceRender, onColorChange }) => {
+const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange }) => {
     const [newEntity, setNewEntity] = useState('');
-    const [currentColor, setCurrentColor] = useState({rgb: { r: 85, g: 0, b: 255, a: 0.2,},});
+    const [currentFillColor, setCurrentFillColor] = useState({rgb: { r: 0, g: 0, b: 0, a: 0.2,},});
+    const [currentBorderColor, setCurrentBorderColor] = useState({rgb: { r: 0, g: 0, b: 0, a: 0.8,},});
 
     const handleAddEntity = () => {
         if (newEntity) {
@@ -12,10 +13,16 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility,
         }
     };
 
-    const handleColorChange = (color) => {
-        setCurrentColor(color);
-        console.log("setting color to", color);
-        onColorChange(layer.id, color);
+    const handleFillColorChange = (fillColor) => {
+        setCurrentFillColor(fillColor);
+        console.log("setting fill color to", fillColor);
+        onFillColorChange(layer.id, fillColor);
+    };
+
+    const handleBorderColorChange = (borderColor) => {
+        setCurrentBorderColor(borderColor);
+        console.log("setting border color to", borderColor);
+        onBorderColorChange(layer.id, borderColor);
     };
 
     return (
@@ -25,22 +32,27 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility,
                     <div className="row mt-4">
                         <h5 className="col-12">{layer.name}</h5>
                     </div>
-                    <div className="col-12 col-md-3 mb-2 mb-md-0">
-                        <ColorPicker onChange={handleColorChange} />
+                    <div className="col-12 col-md-2 mb-2 mb-md-0">
+                        <ColorPicker onChange={handleFillColorChange} />
                     </div>
-                    <div className="col-12 col-md-3 mb-2 mb-md-0">
+                    <div className="col-12 col-md-2 mb-2 mb-md-0">
+                        <ColorPicker onChange={handleBorderColorChange} />
+                    </div>
+                    <div className="col-12 col-md-2 mb-2 mb-md-0">
                         <button className="btn btn-secondary btn-sm w-100" onClick={() => onToggleVisibility(layer.id)}>
                             {layer.visible ? 'Hide' : 'Show'}
                         </button>
                     </div>
-                    <div className="col-12 col-md-3 mb-2 mb-md-0">
-                        <button className="btn btn-danger btn-sm w-100" onClick={() => onRemoveLayer(layer.id)}>
-                            &times;
-                        </button>
-                    </div>
-                    <div className="col-12 col-md-3 mb-2 mb-md-0">
+                    <div className="col-12 col-md-2 mb-2 mb-md-0">
                         <button className="btn btn-secondary btn-sm w-100" onClick={() => onForceRender(layer.id)}>
                             <i className="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                    <div className="col-12 col-md-2 mb-2 mb-md-0">
+                    </div>
+                    <div className="col-12 col-md-2 mb-2 mb-md-0">
+                        <button className="btn btn-danger btn-sm w-100" title="Delete Layer" onClick={() => onRemoveLayer(layer.id)}>
+                            &times;
                         </button>
                     </div>
                 </div>
