@@ -5,7 +5,7 @@ import MapComponent from './components/MapComponent';
 
 function App() {
     const [layers, setLayers] = useState([
-        { id: 1, name: 'Default Layer', type: 'country', entities: [], visible: true, color: '#5500FF' }
+        { id: 1, name: 'Default Layer', type: 'country', entities: [], visible: true, color: {rgb: { r: 85, g: 0, b: 255, a: 0.2,}, hex: "#5500FF"} }
     ]);
     //const [countries, setCountries] = useState([]);
     //const [layersVisible, setLayersVisible] = useState(true);
@@ -40,7 +40,7 @@ function App() {
             name,
             entities: [],
             visible: true,
-            color: '#5500FF',
+            color: {rgb: { r: 85, g: 0, b: 255, a: 0.2,}, hex: "#5500FF"} ,
         };
         setLayers([...layers, newLayer]);
     };

@@ -53,9 +53,9 @@ const MapLayer = ({ entities, type, visible, onEntityError, color }) => {
         Object.keys(layersRef.current).forEach(entity => {
             const layer = layersRef.current[entity].layer;
             layer.setStyle({
-                fillColor: color,
+                fillColor: color.hex,
                 color: 'white', // Boundary color
-                fillOpacity: 0.2,
+                fillOpacity: color.rgb.a,
             });
         });
     };
@@ -96,14 +96,15 @@ const MapLayer = ({ entities, type, visible, onEntityError, color }) => {
                                 onEntityError(entity); // Trigger error callback
                                 return;
                             }
+                            console.log(color)
 
                             const geoJsonLayer = L.geoJson(data, {
                                 style: {
-                                    fillColor: color,
+                                    fillColor: color.hex,
                                     weight: 2,
                                     opacity: 1,
                                     color: 'white',
-                                    fillOpacity: 0.2
+                                    fillOpacity: color.rgb.a
                                 }
                             });
 

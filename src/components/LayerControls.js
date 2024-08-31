@@ -3,7 +3,7 @@ import ColorPicker from './ColorPicker';
 
 const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility, onRemoveLayer, onForceRender, onColorChange }) => {
     const [newEntity, setNewEntity] = useState('');
-    const [currentColor, setCurrentColor] = useState('#5500FF');
+    const [currentColor, setCurrentColor] = useState({rgb: { r: 85, g: 0, b: 255, a: 0.2,},});
 
     const handleAddEntity = () => {
         if (newEntity) {
@@ -12,10 +12,10 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility,
         }
     };
 
-    const handleColorChange = (colorHex) => {
-        setCurrentColor(colorHex);
-        console.log("setting color to", colorHex);
-        onColorChange(layer.id, colorHex);
+    const handleColorChange = (color) => {
+        setCurrentColor(color);
+        console.log("setting color to", color);
+        onColorChange(layer.id, color);
     };
 
     return (
