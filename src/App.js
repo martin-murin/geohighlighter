@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import Sidebar from './components/Sidebar';
 import MapComponent from './components/MapComponent';
+import './App.css'
 
 function App() {
     const [layers, setLayers] = useState([]);
@@ -174,6 +175,7 @@ function App() {
                             />
                         </div>
                     </div>
+                    <div className="mt-2 scrollable">
                     <Sidebar
                         layers={layers}
                         onAddEntity={addEntityToLayer}
@@ -185,6 +187,7 @@ function App() {
                         onFillColorChange={handleFillColorChange}
                         onBorderColorChange={handleBorderColorChange}
                     />
+                    </div>
                 </div>
                 <div className="col-md-9 col-sm-12" style={{ height: "100vh" }}>
                     <MapComponent layers={layers} handleEntityError={handleEntityError} handleUpdateEntityName={handleUpdateEntityName} />
