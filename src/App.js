@@ -109,7 +109,6 @@ function App() {
     };
 
     const handleUpdateEntityName = (layerId, entity, name) => {
-        console.log("Received call in App.js, update entity name with ", name)
         setLayers(prevLayers => prevLayers.map(layer => {
             if (layer.id === layerId) {
                 return {
@@ -124,10 +123,47 @@ function App() {
         }));
     };
 
+    const handleExport = () => {
+        const dataToExport = JSON.stringify(layers);
+        const blob = new Blob([dataToExport], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'layers_export.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleImport = (event) => {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const importedLayers = JSON.parse(e.target.result);
+            setLayers(importedLayers); // Update the state with imported data
+        };
+        reader.readAsText(file);
+    };
+
     return (
         <div className="container-fluid">
             <div className="row">
-                <div className="col-md-3 col-sm-12">
+                <div className="col-md-3 col-sm-12 mt-4 text-center">
+                    <h2>Map Highlighter</h2>
+                    <div className="row">
+                        <div className="col-md-6 col-sm-12 mt-2 mb-2">
+                            <button className="btn btn-primary mx-2" onClick={handleExport}>Export Layers</button>
+                        </div>
+                        <div className="col-md-6 col-sm-12 mt-2 mb-2">
+                            <label className="btn btn-primary mx-2" htmlFor="import-file">Import Layers</label>
+                            <input
+                                id="import-file"
+                                className="form-control d-none"
+                                type="file"
+                                onChange={handleImport}
+                                accept=".json"
+                            />
+                        </div>
+                    </div>
                     <Sidebar
                         layers={layers}
                         onAddEntity={addEntityToLayer}

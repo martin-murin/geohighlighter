@@ -112,7 +112,6 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
                     try {
                         const result = await fetchDataForEntity(type, entity, controllerRef.current);
                         const { data, name } = result;
-                        console.log(name)
                         
                         if (data && data.features.length > 0) {
                             const osmId = data.features[0].properties.osm_id;
@@ -123,8 +122,6 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
                                 onEntityError(entity); // Trigger error callback
                                 return;
                             }
-                            console.log(fillColor)
-                            console.log(borderColor)
 
                             const geoJsonLayer = L.geoJson(data, {
                                 style: {
@@ -145,8 +142,6 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
 
                             osmIdSetRef.current.add(osmId);
                             geoJsonLayer.addTo(map);
-                            
-                            console.log("Calling from MapLayer with name = ", name)
                             onUpdateEntityName(entity, name);
 
                         } else {

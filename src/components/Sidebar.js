@@ -15,8 +15,7 @@ const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onToggleLayerVisibility,
 
     return (
         <div className="row">
-            <div className="sidebar col-12 mt-4 text-center">
-                <h2>Map Highlighter</h2>
+            <div className="sidebar col-12 text-center">
                 {layers.map(layer => (
                     <LayerControls
                         key={layer.id}
