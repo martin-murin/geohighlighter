@@ -11,7 +11,7 @@ function App() {
     useEffect(() => {
         const loadLayers = async () => {
             try {
-                const response = await fetch('/layers_default.json');
+                const response = await fetch(`${process.env.PUBLIC_URL}/layers_default.json`);
                 const data = await response.json();
                 setLayers(data);
             } catch (error) {
