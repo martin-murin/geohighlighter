@@ -6,8 +6,8 @@ import MapLayer from './MapLayer'; // Import the new MapLayer component
 const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName }) => {
     return (
         <MapContainer
-            center={[20, 0]}
-            zoom={2}
+            center={[48, 17]}
+            zoom={5}
             style={{ height: "100%", width: "100%" }}
         >
             <TileLayer

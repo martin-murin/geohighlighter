@@ -1,15 +1,25 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import Sidebar from './components/Sidebar';
 import MapComponent from './components/MapComponent';
 
 function App() {
-    const [layers, setLayers] = useState([
-        { id: 1, name: 'Default Layer', type: 'country', entities: [], entityNames: {}, visible: true, fillColor: {rgb: { r: 0, g: 0, b: 0, a: 0.2,}, hex: "#000000"}, borderColor: {rgb: { r: 0, g: 0, b: 0, a: 0.8 }, hex: "#000000"} }
-    ]);
-    //const [countries, setCountries] = useState([]);
-    //const [layersVisible, setLayersVisible] = useState(true);
+    const [layers, setLayers] = useState([]);
+
+    useEffect(() => {
+        const loadLayers = async () => {
+            try {
+                const response = await fetch('/layers_default.json');
+                const data = await response.json();
+                setLayers(data);
+            } catch (error) {
+                console.error('Error loading layers:', error);
+            }
+        };
+        loadLayers();
+    }, []);
+
 
     const addEntityToLayer = (layerId, entity) => {
         setLayers(layers.map(layer =>
@@ -88,7 +98,7 @@ function App() {
                         l.id === layerId ? { ...l, entities: [...l.entities, entity] } : l
                     )
                 );
-            }, 5000); // 300ms delay between each addition
+            }, 5000);
         });
     };
 
@@ -139,7 +149,7 @@ function App() {
         const reader = new FileReader();
         reader.onload = (e) => {
             const importedLayers = JSON.parse(e.target.result);
-            setLayers(importedLayers); // Update the state with imported data
+            setLayers(importedLayers);
         };
         reader.readAsText(file);
     };
