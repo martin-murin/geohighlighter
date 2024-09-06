@@ -98,28 +98,30 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
         controllerRef.current = new AbortController();
 
         // Remove layers for entities that are no longer in the list
-        Object.keys(layersRef.current).forEach(entity => {
-            if (!entities.includes(entity)) {
-                map.removeLayer(layersRef.current[entity].layer);
-                osmIdSetRef.current.delete(layersRef.current[entity].osm_id);
-                delete layersRef.current[entity];
+        Object.keys(layersRef.current).forEach(entityId => {
+            if (!entities.some(e => e.id === entityId)) {  // Update check for object structure
+                map.removeLayer(layersRef.current[entityId].layer);
+                osmIdSetRef.current.delete(layersRef.current[entityId].osm_id);
+                delete layersRef.current[entityId];
             }
         });
 
         if (visible) {
             entities.forEach(async (entity) => {
-                if (!layersRef.current[entity]) {
+                const { id, name } = entity; // Destructure to get id and name
+
+                if (!layersRef.current[id]) {
                     try {
-                        const result = await fetchDataForEntity(type, entity, controllerRef.current);
-                        const { data, name } = result;
-                        
+                        const result = await fetchDataForEntity(type, id, controllerRef.current);
+                        const { data, name: fetchedName } = result;
+
                         if (data && data.features.length > 0) {
                             const osmId = data.features[0].properties.osm_id;
-                            
+
                             // Prevent adding the same osm_id twice
                             if (osmIdSetRef.current.has(osmId)) {
                                 setWarning(`Entity with OSM ID ${osmId} is already added.`);
-                                onEntityError(entity); // Trigger error callback
+                                onEntityError(id); // Trigger error callback
                                 return;
                             }
 
@@ -134,29 +136,29 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
                             });
 
                             // Store the layer and osm_id reference
-                            layersRef.current[entity] = {
+                            layersRef.current[id] = {
                                 layer: geoJsonLayer,
                                 osm_id: osmId,
-                                name: name,
+                                name: fetchedName || name,  // Use fetched name or existing one
                             };
 
                             osmIdSetRef.current.add(osmId);
                             geoJsonLayer.addTo(map);
-                            onUpdateEntityName(entity, name);
+                            onUpdateEntityName(id, fetchedName || name);
 
                         } else {
-                            setWarning(`Entity "${entity}" not found.`);
-                            onEntityError(entity); // Trigger error callback
+                            setWarning(`Entity "${name}" not found.`);
+                            onEntityError(id); // Trigger error callback
                         }
                     } catch (error) {
                         if (error.name !== 'AbortError') {
-                            console.error(`Error fetching data for ${entity}:`, error);
-                            setWarning(`Error fetching data for "${entity}".`);
-                            onEntityError(entity); // Trigger error callback
+                            console.error(`Error fetching data for ${name}:`, error);
+                            setWarning(`Error fetching data for "${name}".`);
+                            onEntityError(id); // Trigger error callback
                         }
                     }
                 } else {
-                    layersRef.current[entity].layer.addTo(map);
+                    layersRef.current[id].layer.addTo(map);
                 }
             });
         } else {
@@ -164,8 +166,9 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
                 map.removeLayer(layer);
             });
         }
+    }, 3000); // Debounce delay in milliseconds
 
-    }, 300); // Debounce delay in milliseconds
+
 
     useEffect(() => {
         updateLayers(); // Call the debounced function

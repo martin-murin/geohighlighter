@@ -22,20 +22,31 @@ function App() {
     }, []);
 
 
-    const addEntityToLayer = (layerId, entity) => {
-        setLayers(layers.map(layer =>
-            layer.id === layerId
-                ? { ...layer, entities: [...layer.entities, entity] }
-                : layer
-        ));
+    const addEntityToLayer = (layerId, newEntity) => {
+        setLayers(layers.map(layer => {
+            if (layer.id === layerId) {
+                return {
+                    ...layer,
+                    entities: [
+                        ...layer.entities,
+                        { id: newEntity.id, name: newEntity.name}
+                    ]
+                };
+            }
+            return layer;
+        }));
     };
 
-    const removeEntityFromLayer = (layerId, entity) => {
-        setLayers(layers.map(layer =>
-            layer.id === layerId
-                ? { ...layer, entities: layer.entities.filter(e => e !== entity) }
-                : layer
-        ));
+    const removeEntityFromLayer = (layerId, entityId) => {
+        setLayers(layers.map(layer => {
+            if (layer.id === layerId) {
+                return {
+                    ...layer,
+                    entities: layer.entities.filter(entity => entity.id !== entityId)
+                };
+            }
+            return layer;
+        }));
     };
 
     const toggleLayerVisibility = (layerId) => {
@@ -119,15 +130,14 @@ function App() {
         );
     };
 
-    const handleUpdateEntityName = (layerId, entity, name) => {
+    const handleUpdateEntityName = (layerId, entityId, newName) => {
         setLayers(prevLayers => prevLayers.map(layer => {
             if (layer.id === layerId) {
                 return {
                     ...layer,
-                    entityNames: {
-                        ...layer.entityNames,
-                        [entity]: name
-                    }
+                    entities: layer.entities.map(entity =>
+                        entity.id === entityId ? { ...entity, name: newName } : entity
+                    )
                 };
             }
             return layer;

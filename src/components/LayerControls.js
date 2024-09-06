@@ -2,14 +2,18 @@ import React, { useState } from 'react';
 import ColorPicker from './ColorPicker';
 
 const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange }) => {
-    const [newEntity, setNewEntity] = useState('');
+    const [newEntityId, setNewEntityId] = useState('');
     const [currentFillColor, setCurrentFillColor] = useState({rgb: { r: 0, g: 0, b: 0, a: 0.2,},});
     const [currentBorderColor, setCurrentBorderColor] = useState({rgb: { r: 0, g: 0, b: 0, a: 0.8,},});
 
     const handleAddEntity = () => {
-        if (newEntity) {
+        if (newEntityId) {
+            const newEntity = {
+                id: newEntityId,
+                name: newEntityId
+            }
             onAddEntity(layer.id, newEntity);
-            setNewEntity('');
+            setNewEntityId('');
         }
     };
 
@@ -57,8 +61,8 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility,
                     className="form-control col-12"
                     type="text"
                     placeholder={`Add entity`}
-                    value={newEntity}
-                    onChange={(e) => setNewEntity(e.target.value)}
+                    value={newEntityId}
+                    onChange={(e) => setNewEntityId(e.target.value)}
                     onKeyPress={(e) => {
                         if (e.key === 'Enter') {
                             handleAddEntity();
@@ -71,10 +75,8 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility,
             <ul className="list-group">
               {layer.entities.map((entity, index) => (
                 <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
-                  {layer.entityNames && layer.entityNames[entity]
-                    ? layer.entityNames[entity]  // Display the name if it exists
-                    : "Loading..."}
-                  <button className="btn btn-danger btn-sm" onClick={() => onRemoveEntity(layer.id, entity)}>
+                  {entity.name ? entity.name : "Loading..."}
+                  <button className="btn btn-danger btn-sm" onClick={() => onRemoveEntity(layer.id, entity.id)}>
                     &times;
                   </button>
                 </li>
