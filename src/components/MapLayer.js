@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
+import './MapLayer.css'
 
 // Debounce function to delay updates
 function debounce(fn, delay) {
@@ -20,9 +21,9 @@ const generateUrl = (type, entity) => {
     // Check if the entity matches the OSM ID format
     const osmIdPattern = /^[n|w|r|s|m|t|b|a|p|l]\d+$/i;
     if (osmIdPattern.test(entity)) {
-        return `https://nominatim.openstreetmap.org/lookup?osm_ids=${entity}&format=geojson&polygon_geojson=1`;
+        return `https://nominatim.openstreetmap.org/lookup?osm_ids=${entity}&format=geojson&polygon_geojson=${type}`;
     } else {
-        return `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(entity)}&format=geojson&polygon_geojson=1`;
+        return `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(entity)}&format=geojson&polygon_geojson=${type}`;
     }
 };
 
@@ -78,10 +79,24 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
     const updateLayerBorderColors = () => {
         Object.keys(layersRef.current).forEach(entity => {
             const layer = layersRef.current[entity].layer;
+            const marker = layersRef.current[entity].marker;
+
+            // Update the polygon border color
             layer.setStyle({
                 color: borderColor.hex,
                 opacity: borderColor.rgb.a,
             });
+
+            // Update the marker color by changing the inline style of the icon
+            if (marker) {
+                const iconElement = marker.getElement(); // Get the marker's DOM element
+                if (iconElement) {
+                    const icon = iconElement.querySelector('i'); // Select the <i> element
+                    if (icon) {
+                        icon.style.color = borderColor.hex; // Update the color
+                    }
+                }
+            }
         });
     };
 
@@ -101,6 +116,7 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
         Object.keys(layersRef.current).forEach(entityId => {
             if (!entities.some(e => e.id === entityId)) {  // Update check for object structure
                 map.removeLayer(layersRef.current[entityId].layer);
+                map.removeLayer(layersRef.current[entityId].marker);
                 osmIdSetRef.current.delete(layersRef.current[entityId].osm_id);
                 delete layersRef.current[entityId];
             }
@@ -112,11 +128,16 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
 
                 if (!layersRef.current[id]) {
                     try {
-                        const result = await fetchDataForEntity(type, id, controllerRef.current);
-                        const { data, name: fetchedName } = result;
+                        const result_polygon = await fetchDataForEntity(1, id, controllerRef.current);
+                        const result_point = await fetchDataForEntity(0, id, controllerRef.current);
+                        const { data: data_polygon, name: fetchedName } = result_polygon;
+                        const { data: data_point, name: fetchedName_ } = result_point;
+                        const pointCoordinates = data_point?.features?.[0]?.geometry?.type === 'Point'
+                            ? data_point.features[0].geometry.coordinates
+                            : null;
 
-                        if (data && data.features.length > 0) {
-                            const osmId = data.features[0].properties.osm_id;
+                        if (data_polygon && data_polygon.features.length > 0) {
+                            const osmId = data_polygon.features[0].properties.osm_id;
 
                             // Prevent adding the same osm_id twice
                             if (osmIdSetRef.current.has(osmId)) {
@@ -125,7 +146,7 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
                                 return;
                             }
 
-                            const geoJsonLayer = L.geoJson(data, {
+                            const geoJsonLayer = L.geoJson(data_polygon, {
                                 style: {
                                     fillColor: fillColor.hex,
                                     fillOpacity: fillColor.rgb.a,
@@ -135,8 +156,19 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
                                 }
                             });
 
+                            // Add marker if pointCoordinates are available
+                            const [lon, lat] = pointCoordinates;
+                            const marker = L.marker([lat, lon], {
+                                icon: L.divIcon({
+                                    className: 'custom-icon',
+                                    html: `<i class="bi bi-geo-alt-fill" style="color: ${borderColor.hex};"></i>`,
+                                    iconAnchor: [12, 24],
+                                })
+                            });
+
                             // Store the layer and osm_id reference
                             layersRef.current[id] = {
+                                marker,
                                 layer: geoJsonLayer,
                                 osm_id: osmId,
                                 name: fetchedName || name,  // Use fetched name or existing one
@@ -144,6 +176,7 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
 
                             osmIdSetRef.current.add(osmId);
                             geoJsonLayer.addTo(map);
+                            marker.addTo(map);
                             onUpdateEntityName(id, fetchedName || name);
 
                         } else {
@@ -159,14 +192,18 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
                     }
                 } else {
                     layersRef.current[id].layer.addTo(map);
+                    layersRef.current[id].marker.addTo(map);
                 }
             });
         } else {
             Object.values(layersRef.current).forEach(({ layer }) => {
                 map.removeLayer(layer);
             });
+            Object.values(layersRef.current).forEach(({ marker }) => {
+                map.removeLayer(marker);
+            });
         }
-    }, 3000); // Debounce delay in milliseconds
+    }, 300); // Debounce delay in milliseconds
 
 
 
