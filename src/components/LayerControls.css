@@ -1,0 +1,9 @@
+.color-picker-container {
+    position: relative;
+}
+
+.color-picker-container .color-picker {
+    position: absolute;
+    top: 0;
+    left: 0;
+}

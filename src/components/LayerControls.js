@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ColorPicker from './ColorPicker';
+import './LayerControls.css'
 
 const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange }) => {
     const [newEntityId, setNewEntityId] = useState('');
-    const [currentFillColor, setCurrentFillColor] = useState({rgb: { r: 0, g: 0, b: 0, a: 0.2,},});
-    const [currentBorderColor, setCurrentBorderColor] = useState({rgb: { r: 0, g: 0, b: 0, a: 0.8,},});
+    const [currentFillColor, setCurrentFillColor] = useState(layer.fillColor);
+    const [currentBorderColor, setCurrentBorderColor] = useState(layer.borderColor);
 
     const handleAddEntity = () => {
         if (newEntityId) {
@@ -16,6 +17,14 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility,
             setNewEntityId('');
         }
     };
+
+    useEffect(() => {
+        setCurrentFillColor(layer.fillColor);
+    }, [layer.fillColor]);
+
+    useEffect(() => {
+        setCurrentBorderColor(layer.borderColor);
+    }, [layer.borderColor]);
 
     const handleFillColorChange = (fillColor) => {
         setCurrentFillColor(fillColor);
@@ -35,10 +44,14 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility,
                         <h5 className="col-12">{layer.name}</h5>
                     </div>
                     <div className="col-12 col-lg-2 mb-2 mb-lg-0">
-                        <ColorPicker onChange={handleFillColorChange} />
+                        <div className="color-picker-container" style={{ position: 'relative' }}>
+                            <ColorPicker color={currentFillColor} onChange={handleFillColorChange} pickerType="fill" />
+                        </div>
                     </div>
                     <div className="col-12 col-lg-2 mb-2 mb-lg-0">
-                        <ColorPicker onChange={handleBorderColorChange} />
+                        <div className="color-picker-container" style={{ position: 'relative' }}>
+                            <ColorPicker color={currentBorderColor} onChange={handleBorderColorChange} pickerType="border" />
+                        </div>
                     </div>
                     <div className="col-12 col-lg-3 mb-2 mb-lg-0">
                         <button className="btn btn-secondary btn-sm w-100" onClick={() => onToggleVisibility(layer.id)}>
