@@ -19,7 +19,8 @@ const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName }) => 
                         key={index}
                         type={layer.type}
                         entities={layer.entities}
-                        visible={layer.visible}
+                        polygonsVisible={layer.polygonsVisible}
+                        markersVisible={layer.markersVisible}
                         fillColor={layer.fillColor}
                         borderColor={layer.borderColor}
                         onEntityError={(entity) => handleEntityError(layer.id, entity)}

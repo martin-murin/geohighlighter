@@ -49,10 +49,17 @@ function App() {
         }));
     };
 
-    const toggleLayerVisibility = (layerId) => {
+    const togglePolygonVisibility = (layerId) => {
         setLayers(layers.map(layer =>
             layer.id === layerId
-                ? { ...layer, visible: !layer.visible }
+                ? { ...layer, polygonsVisible: !layer.polygonsVisible }
+                : layer
+        ));
+    };
+    const toggleMarkerVisibility = (layerId) => {
+        setLayers(layers.map(layer =>
+            layer.id === layerId
+                ? { ...layer, markersVisible: !layer.markersVisible }
                 : layer
         ));
     };
@@ -62,7 +69,8 @@ function App() {
             id: Date.now(),
             name,
             entities: [],
-            visible: true,
+            polygonsVisible: true,
+            markersVisible: true,
             fillColor: {rgb: { r: 0, g: 0, b: 0, a: 0.2,}, hex: "#000000"} ,
             borderColor: {rgb: { r: 0, g: 0, b: 0, a: 0.8,}, hex: "#000000"} ,
         };
@@ -190,7 +198,8 @@ function App() {
                         layers={layers}
                         onAddEntity={addEntityToLayer}
                         onRemoveEntity={removeEntityFromLayer}
-                        onToggleLayerVisibility={toggleLayerVisibility}
+                        onTogglePolygonVisibility={togglePolygonVisibility}
+                        onToggleMarkerVisibility={toggleMarkerVisibility}
                         onAddLayer={addNewLayer}
                         onRemoveLayer={handleRemoveLayer}
                         onForceRender={handleForceRender}

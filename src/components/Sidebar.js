@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import LayerControls from './LayerControls'; // Assuming you have a separate component for layer controls
 import { Button, Form, FormControl, InputGroup, Dropdown } from 'react-bootstrap';
 
-const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onToggleLayerVisibility, onAddLayer, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange}) => {
+const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onAddLayer, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange}) => {
     const [newLayerName, setNewLayerName] = useState('');
     const [newLayerType, setNewLayerType] = useState('country');
 
@@ -22,7 +22,8 @@ const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onToggleLayerVisibility,
                         layer={layer}
                         onAddEntity={onAddEntity}
                         onRemoveEntity={onRemoveEntity}
-                        onToggleVisibility={onToggleLayerVisibility}
+                        onTogglePolygonVisibility={onTogglePolygonVisibility}
+                        onToggleMarkerVisibility={onToggleMarkerVisibility}
                         onRemoveLayer={onRemoveLayer}
                         onForceRender={onForceRender}
                         onFillColorChange={onFillColorChange}

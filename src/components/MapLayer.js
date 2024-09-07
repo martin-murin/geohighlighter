@@ -48,7 +48,7 @@ const fetchDataForEntity = async (type, entity) => {
 };
 
 // MapLayer component
-const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderColor, onUpdateEntityName }) => {
+const MapLayer = ({ entities, type, polygonsVisible, markersVisible, onEntityError, fillColor, borderColor, onUpdateEntityName }) => {
     const map = useMap();
     const layersRef = useRef({});
     const osmIdSetRef = useRef(new Set()); // Set to track osm_ids to prevent duplicates
@@ -122,7 +122,7 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
             }
         });
 
-        if (visible) {
+        if (polygonsVisible || markersVisible) {
             entities.forEach(async (entity) => {
                 const { id, name } = entity; // Destructure to get id and name
 
@@ -156,7 +156,6 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
                                 }
                             });
 
-                            // Add marker if pointCoordinates are available
                             const [lon, lat] = pointCoordinates;
                             const marker = L.marker([lat, lon], {
                                 icon: L.divIcon({
@@ -175,8 +174,12 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
                             };
 
                             osmIdSetRef.current.add(osmId);
-                            geoJsonLayer.addTo(map);
-                            marker.addTo(map);
+                            if (polygonsVisible) {
+                                geoJsonLayer.addTo(map);
+                            }
+                            if (markersVisible){
+                                marker.addTo(map);
+                            }
                             onUpdateEntityName(id, fetchedName || name);
 
                         } else {
@@ -191,8 +194,16 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
                         }
                     }
                 } else {
-                    layersRef.current[id].layer.addTo(map);
-                    layersRef.current[id].marker.addTo(map);
+                    if (polygonsVisible){
+                        layersRef.current[id].layer.addTo(map);
+                    } else {
+                        map.removeLayer(layersRef.current[id].layer);
+                    }
+                    if (markersVisible){
+                        layersRef.current[id].marker.addTo(map);
+                    } else {
+                        map.removeLayer(layersRef.current[id].marker);
+                    }
                 }
             });
         } else {
@@ -209,7 +220,7 @@ const MapLayer = ({ entities, type, visible, onEntityError, fillColor, borderCol
 
     useEffect(() => {
         updateLayers(); // Call the debounced function
-    }, [entities, map, visible]);
+    }, [entities, map, polygonsVisible, markersVisible]);
 
     useEffect(() => {
         updateLayerFillColors(); // Update layer colors when color changes

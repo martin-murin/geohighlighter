@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ColorPicker from './ColorPicker';
 import './LayerControls.css'
 
-const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange }) => {
+const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange }) => {
     const [newEntityId, setNewEntityId] = useState('');
     const [currentFillColor, setCurrentFillColor] = useState(layer.fillColor);
     const [currentBorderColor, setCurrentBorderColor] = useState(layer.borderColor);
@@ -54,15 +54,28 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onToggleVisibility,
                         </div>
                     </div>
                     <div className="col-12 col-lg-3 mb-2 mb-lg-0">
-                        <button className="btn btn-secondary btn-sm w-100" onClick={() => onToggleVisibility(layer.id)}>
-                            {layer.visible ? 'Hide' : 'Show'}
+                        <button className="btn btn-secondary btn-sm w-100" onClick={() => onTogglePolygonVisibility(layer.id)}>
+                            {layer.polygonsVisible 
+                              ? <i className="bi bi-map-fill"></i>
+                              : <i className="bi bi-map"></i>
+                            }
                         </button>
                     </div>
+                    <div className="col-12 col-lg-3 mb-2 mb-lg-0">
+                        <button className="btn btn-secondary btn-sm w-100" onClick={() => onToggleMarkerVisibility(layer.id)}>
+                            {layer.markersVisible
+                              ? <i className="bi bi-geo-alt-fill"></i>
+                              : <i className="bi bi-geo-alt"></i>
+                            }
+                        </button>
+                    </div>
+                    {/*
                     <div className="col-12 col-lg-3 mb-2 mb-lg-0">
                         <button className="btn btn-secondary btn-sm w-100" onClick={() => onForceRender(layer.id)}>
                             <i className="bi bi-arrow-clockwise"></i>
                         </button>
                     </div>
+                    */}
                     <div className="col-12 col-lg-2 mb-2 mb-lg-0">
                         <button className="btn btn-danger btn-sm w-100" title="Delete Layer" onClick={() => onRemoveLayer(layer.id)}>
                             &times;
