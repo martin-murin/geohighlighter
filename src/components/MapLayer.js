@@ -63,7 +63,12 @@ const MapLayer = ({ entities, type, polygonsVisible, markersVisible, onEntityErr
     useEffect(() => {
         return () => {
             Object.values(layersRef.current).forEach(layer => {
-                map.removeLayer(layer.layer);
+                if (layer.layer) {
+                    map.removeLayer(layer.layer);  // Remove polygons
+                }
+                if (layer.marker) {
+                    map.removeLayer(layer.marker); // Remove markers
+                }
             });
             layersRef.current = {};
             osmIdSetRef.current.clear();
@@ -136,7 +141,7 @@ const MapLayer = ({ entities, type, polygonsVisible, markersVisible, onEntityErr
                         const result_point = await fetchDataForEntity(0, id, controllerRef.current);
                         if (!layersRef.current[id]) {
                             const { data: data_polygon, name: fetchedName } = result_polygon;
-                            const { data: data_point, name: fetchedName_ } = result_point;
+                            const { data: data_point } = result_point;
                             const pointCoordinates = data_point?.features?.[0]?.geometry?.type === 'Point'
                                 ? data_point.features[0].geometry.coordinates
                                 : null;
