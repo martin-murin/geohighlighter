@@ -81,14 +81,14 @@ function App() {
         setLayers(prevLayers => prevLayers.filter(layer => layer.id !== layerId));
     };
 
-    const handleEntityError = (layerId, entity) => {
+    const handleEntityError = (layerId, entityId) => {
         // Prevent adding the entity to the list if there's an error
         setLayers(prevLayers => {
             return prevLayers.map(layer => {
                 if (layer.id === layerId) {
                     return {
                         ...layer,
-                        entities: layer.entities.filter(e => e !== entity),
+                        entities: layer.entities.filter(e => e.id !== entityId),
                     };
                 }
                 return layer;

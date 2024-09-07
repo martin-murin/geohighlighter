@@ -54,6 +54,17 @@ class ColorPicker extends React.Component {
         width: '100%',
         height: '100%',
       },
+      popover: {
+        position: 'absolute',
+        zIndex: '2',
+      },
+      cover: {
+        position: 'fixed',
+        top: '0px',
+        right: '0px',
+        bottom: '0px',
+        left: '0px',
+      },
     };
 
     const borderSwatchStyles = {
@@ -72,6 +83,17 @@ class ColorPicker extends React.Component {
         background: `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`,
         width: '100%',
         height: '100%',
+      },
+      popover: {
+        position: 'absolute',
+        zIndex: '2',
+      },
+      cover: {
+        position: 'fixed',
+        top: '0px',
+        right: '0px',
+        bottom: '0px',
+        left: '0px',
       },
     };
 

@@ -40,7 +40,11 @@ const fetchDataForEntity = async (type, entity) => {
         // Extract the name from the response
         const name = data?.features?.[0]?.properties?.name || data?.features?.[0]?.properties?.display_name || 'Unknown';
 
-        return { data, name };
+        if ((type === 0 && data?.features?.[0]?.geometry?.type === 'Point') || (type === 1 && data?.features?.[0]?.geometry?.type != 'Point')){
+            return { data, name };
+        } else {
+            return { data: null, name };
+        }
     } catch (error) {
         console.error(`Error fetching data for ${entity}:`, error);
         throw error;
@@ -130,61 +134,63 @@ const MapLayer = ({ entities, type, polygonsVisible, markersVisible, onEntityErr
                     try {
                         const result_polygon = await fetchDataForEntity(1, id, controllerRef.current);
                         const result_point = await fetchDataForEntity(0, id, controllerRef.current);
-                        const { data: data_polygon, name: fetchedName } = result_polygon;
-                        const { data: data_point, name: fetchedName_ } = result_point;
-                        const pointCoordinates = data_point?.features?.[0]?.geometry?.type === 'Point'
-                            ? data_point.features[0].geometry.coordinates
-                            : null;
+                        if (!layersRef.current[id]) {
+                            const { data: data_polygon, name: fetchedName } = result_polygon;
+                            const { data: data_point, name: fetchedName_ } = result_point;
+                            const pointCoordinates = data_point?.features?.[0]?.geometry?.type === 'Point'
+                                ? data_point.features[0].geometry.coordinates
+                                : null;
 
-                        if (data_polygon && data_polygon.features.length > 0) {
-                            const osmId = data_polygon.features[0].properties.osm_id;
+                            if (data_point || data_polygon) {
+                                const osmId = data_point.features[0].properties.osm_id;
 
-                            // Prevent adding the same osm_id twice
-                            if (osmIdSetRef.current.has(osmId)) {
-                                setWarning(`Entity with OSM ID ${osmId} is already added.`);
-                                onEntityError(id); // Trigger error callback
-                                return;
-                            }
-
-                            const geoJsonLayer = L.geoJson(data_polygon, {
-                                style: {
-                                    fillColor: fillColor.hex,
-                                    fillOpacity: fillColor.rgb.a,
-                                    color: borderColor.hex,
-                                    opacity: borderColor.rgb.a,
-                                    weight: 2,
+                                // Prevent adding the same osm_id twice
+                                if (osmIdSetRef.current.has(osmId)) {
+                                    setWarning(`Entity with OSM ID ${osmId} is already added.`);
+                                    onEntityError(id); // Trigger error callback
+                                    return;
                                 }
-                            });
 
-                            const [lon, lat] = pointCoordinates;
-                            const marker = L.marker([lat, lon], {
-                                icon: L.divIcon({
-                                    className: 'custom-icon',
-                                    html: `<i class="bi bi-geo-alt-fill" style="color: ${borderColor.hex};"></i>`,
-                                    iconAnchor: [12, 24],
-                                })
-                            });
+                                const geoJsonLayer = L.geoJson(data_polygon, {
+                                    style: {
+                                        fillColor: fillColor.hex,
+                                        fillOpacity: fillColor.rgb.a,
+                                        color: borderColor.hex,
+                                        opacity: borderColor.rgb.a,
+                                        weight: 2,
+                                    }
+                                });
 
-                            // Store the layer and osm_id reference
-                            layersRef.current[id] = {
-                                marker,
-                                layer: geoJsonLayer,
-                                osm_id: osmId,
-                                name: fetchedName || name,  // Use fetched name or existing one
-                            };
+                                const [lon, lat] = pointCoordinates;
+                                const marker = L.marker([lat, lon], {
+                                    icon: L.divIcon({
+                                        className: 'custom-icon',
+                                        html: `<i class="bi bi-geo-alt-fill" style="color: ${borderColor.hex};"></i>`,
+                                        iconAnchor: [12, 24],
+                                    })
+                                });
 
-                            osmIdSetRef.current.add(osmId);
-                            if (polygonsVisible) {
-                                geoJsonLayer.addTo(map);
+                                // Store the layer and osm_id reference
+                                layersRef.current[id] = {
+                                    marker,
+                                    layer: geoJsonLayer,
+                                    osm_id: osmId,
+                                    name: fetchedName || name,  // Use fetched name or existing one
+                                };
+
+                                osmIdSetRef.current.add(osmId);
+                                if (polygonsVisible) {
+                                    geoJsonLayer.addTo(map);
+                                }
+                                if (markersVisible){
+                                    marker.addTo(map);
+                                }
+                                onUpdateEntityName(id, fetchedName || name);
+
+                            } else {
+                                setWarning(`Entity "${name}" not found.`);
+                                onEntityError(id); // Trigger error callback
                             }
-                            if (markersVisible){
-                                marker.addTo(map);
-                            }
-                            onUpdateEntityName(id, fetchedName || name);
-
-                        } else {
-                            setWarning(`Entity "${name}" not found.`);
-                            onEntityError(id); // Trigger error callback
                         }
                     } catch (error) {
                         if (error.name !== 'AbortError') {
@@ -214,7 +220,7 @@ const MapLayer = ({ entities, type, polygonsVisible, markersVisible, onEntityErr
                 map.removeLayer(marker);
             });
         }
-    }, 300); // Debounce delay in milliseconds
+    }, 500); // Debounce delay in milliseconds
 
 
 
