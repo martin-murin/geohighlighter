@@ -1,26 +1,76 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import Sidebar from './components/Sidebar';
 import MapComponent from './components/MapComponent';
 import './App.css'
+import { get, set } from 'idb-keyval';
 
 function App() {
     const [layers, setLayers] = useState([]);
+    // track first render to skip initial empty save
+    const isInitialMount = useRef(true);
 
     useEffect(() => {
-        const loadLayers = async () => {
+        const loadData = async () => {
+            let data;
+            try {
+                data = await get('layers');
+                console.log('loadData: fetched from IndexedDB', data);
+                if (data) {
+                    setLayers(data);
+                    return;
+                }
+            } catch (error) {
+                console.error('IndexedDB error reading layers:', error);
+            }
+            if (window.localStorage) {
+                const lsData = localStorage.getItem('layers');
+                if (lsData) {
+                    try {
+                        const parsed = JSON.parse(lsData);
+                        console.log('loadData: migrating from localStorage', parsed);
+                        setLayers(parsed);
+                        try { await set('layers', parsed); } catch(err) { console.error('Error migrating layers to IndexedDB', err); }
+                        localStorage.removeItem('layers');
+                        return;
+                    } catch (e) {
+                        console.error('Error parsing localStorage layers:', e);
+                    }
+                }
+            }
+            console.log('loadData: loading default JSON');
             try {
                 const response = await fetch(`${process.env.PUBLIC_URL}/layers_default.json`);
-                const data = await response.json();
-                setLayers(data);
+                const defaultData = await response.json();
+                setLayers(defaultData);
+                try { await set('layers', defaultData); } catch(err) { console.error('Error saving default layers to IndexedDB', err); }
             } catch (error) {
-                console.error('Error loading layers:', error);
+                console.error('Error loading default layers:', error);
             }
         };
-        loadLayers();
+        loadData();
     }, []);
 
+    useEffect(() => {
+        // skip save on initial mount
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+        const saveData = async () => {
+            console.log('saveData: saving to IndexedDB', layers);
+            try {
+                await set('layers', layers);
+            } catch (error) {
+                console.error('IndexedDB error saving layers:', error);
+                if (window.localStorage) {
+                    localStorage.setItem('layers', JSON.stringify(layers));
+                }
+            }
+        };
+        saveData();
+    }, [layers]);
 
     const addEntityToLayer = (layerId, newEntity) => {
         setLayers(layers.map(layer => {
@@ -217,4 +267,3 @@ function App() {
 }
 
 export default App;
-
