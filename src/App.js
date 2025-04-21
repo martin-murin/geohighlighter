@@ -6,6 +6,8 @@ import MapComponent from './components/MapComponent';
 import './App.css'
 import { get, set } from 'idb-keyval';
 import { gpx, kml } from 'togeojson';
+import { v4 as uuidv4 } from 'uuid';
+import hash from 'object-hash';
 
 // Normalize loaded layers to ensure valid GeoJSON Feature shape
 const normalizeLayers = (layersArr) => layersArr.map(layer => ({
@@ -97,31 +99,53 @@ function App() {
 
     const addEntityToLayer = (layerId, newEntity) => {
         setLayers(prevLayers => prevLayers.map(layer => {
-            if (layer.id === layerId) {
-                // avoid duplicates
-                if (layer.featureCollection.features.some(f => f.id === newEntity.id)) {
-                    return layer;
-                }
-                const newFeature = {
-                    type: 'Feature',
-                    id: newEntity.id,
-                    geometry: newEntity.geometry ?? null,
-                    properties: {
-                        name: newEntity.name,
-                        notes: '',
-                        ...(newEntity.osm_type && { osm_type: newEntity.osm_type }),
-                        ...(newEntity.osm_id && { osm_id: newEntity.osm_id })
-                    }
+            if (layer.id !== layerId) return layer;
+            let id, props;
+            // OSM feature: use type/id
+            if (newEntity.osm_type && newEntity.osm_id) {
+                id = `${newEntity.osm_type}/${newEntity.osm_id}`;
+                props = {
+                    ...newEntity.properties,
+                    name: newEntity.name,
+                    notes: newEntity.notes || '',
+                    source: 'osm',
+                    osm_type: newEntity.osm_type,
+                    osm_id: newEntity.osm_id
                 };
-                return {
-                    ...layer,
-                    featureCollection: {
-                        ...layer.featureCollection,
-                        features: [...layer.featureCollection.features, newFeature]
-                    }
+            // Imported features: use provided id or hash geometry
+            } else if (newEntity.imported) {
+                id = newEntity.id || hash(newEntity.geometry || newEntity);
+                props = {
+                    ...newEntity.properties,
+                    name: newEntity.name,
+                    notes: newEntity.properties?.notes || '',
+                    source: 'import'
+                };
+            // Manual entries: generate uuid
+            } else {
+                id = newEntity.id || uuidv4();
+                props = {
+                    name: newEntity.name,
+                    notes: newEntity.notes || '',
+                    source: 'manual'
                 };
             }
-            return layer;
+            if (layer.featureCollection.features.some(f => f.id === id)) {
+                return layer;
+            }
+            const feature = {
+                type: 'Feature',
+                id,
+                geometry: newEntity.geometry ?? null,
+                properties: props
+            };
+            return {
+                ...layer,
+                featureCollection: {
+                    ...layer.featureCollection,
+                    features: [...layer.featureCollection.features, feature]
+                }
+            };
         }));
     };
 
@@ -313,23 +337,17 @@ function App() {
                     console.error('Unsupported file type');
                     return;
                 }
-                const newFeatures = fc.features.map((feature, idx) => ({
-                    type: 'Feature',
-                    id: `${layerId}-import-${Date.now()}-${idx}`,
-                    geometry: feature.geometry,
-                    properties: feature.properties || {}
-                }));
-                setLayers(prevLayers => prevLayers.map(layer =>
-                    layer.id === layerId
-                        ? {
-                            ...layer,
-                            featureCollection: {
-                                ...layer.featureCollection,
-                                features: [...layer.featureCollection.features, ...newFeatures]
-                            }
-                        }
-                        : layer
-                ));
+                fc.features.forEach((feature) => {
+                    // compute deterministic id for import
+                    const featureId = hash(feature.geometry || feature);
+                    addEntityToLayer(layerId, {
+                        id: featureId,
+                        name: feature.properties?.name || '',
+                        geometry: feature.geometry,
+                        imported: true,
+                        properties: feature.properties || {}
+                    });
+                });
             } catch (err) {
                 console.error('Error parsing file', err);
             }
