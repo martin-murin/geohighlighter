@@ -7,6 +7,9 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
     const [currentFillColor, setCurrentFillColor] = useState(layer.fillColor);
     const [currentBorderColor, setCurrentBorderColor] = useState(layer.borderColor);
 
+    // safely get feature list
+    const featuresList = layer.featureCollection?.features ?? [];
+
     const handleAddEntity = () => {
         if (newEntityId) {
             const newEntity = {
@@ -99,10 +102,10 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
             </div>
 
             <ul className="list-group">
-              {layer.entities.map((entity, index) => (
+              {featuresList.map((feature, index) => (
                 <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
-                  {entity.name ? entity.name : "Loading..."}
-                  <button className="btn btn-danger btn-sm" onClick={() => onRemoveEntity(layer.id, entity.id)}>
+                  {feature.properties.name || "Loading..."}
+                  <button className="btn btn-danger btn-sm" onClick={() => onRemoveEntity(layer.id, feature.id)}>
                     &times;
                   </button>
                 </li>
@@ -113,4 +116,3 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
 };
 
 export default LayerControls;
-

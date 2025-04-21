@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
+import simplify from '@turf/simplify';
 import L from 'leaflet';
 import './MapLayer.css'
 
@@ -52,8 +53,9 @@ const fetchDataForEntity = async (type, entity) => {
 };
 
 // MapLayer component
-const MapLayer = ({ entities, type, polygonsVisible, markersVisible, onEntityError, fillColor, borderColor, onUpdateEntityName }) => {
+const MapLayer = ({ layerId, features, polygonsVisible, markersVisible, onEntityError, fillColor, borderColor, onUpdateEntityName, onUpdateGeometry }) => {
     const map = useMap();
+    const entities = features; // alias for backward compatibility
     const layersRef = useRef({});
     const osmIdSetRef = useRef(new Set()); // Set to track osm_ids to prevent duplicates
     const controllerRef = useRef(new AbortController()); // AbortController reference
@@ -110,6 +112,37 @@ const MapLayer = ({ entities, type, polygonsVisible, markersVisible, onEntityErr
     };
 
     const updateLayers = debounce(() => {
+        // Short-circuit rendering for cached geometries
+        entities.forEach(entity => {
+            const { id, geometry, properties } = entity;
+            if (geometry && !layersRef.current[id]) {
+                const featColl = { type: 'FeatureCollection', features: [entity] };
+                const geoJsonLayer = L.geoJson(featColl, {
+                    style: {
+                        fillColor: fillColor.hex,
+                        fillOpacity: fillColor.rgb.a,
+                        color: borderColor.hex,
+                        opacity: borderColor.rgb.a,
+                        weight: 2,
+                    }
+                });
+                let marker = null;
+                if (geometry.type === 'Point') {
+                    const [lon, lat] = geometry.coordinates;
+                    marker = L.marker([lat, lon], {
+                        icon: L.divIcon({
+                            className: 'custom-icon',
+                            html: `<i class="bi bi-geo-alt-fill" style="color: ${borderColor.hex};"></i>`,
+                            iconAnchor: [12, 24],
+                        })
+                    });
+                }
+                layersRef.current[id] = { marker, layer: geoJsonLayer, osm_id: null, name: properties.name };
+                if (polygonsVisible) geoJsonLayer.addTo(map);
+                if (markersVisible && marker) marker.addTo(map);
+            }
+        });
+
         console.log('Debounced update running with entities:', entities);
 
         if (!map) {
@@ -133,6 +166,8 @@ const MapLayer = ({ entities, type, polygonsVisible, markersVisible, onEntityErr
 
         if (polygonsVisible || markersVisible) {
             entities.forEach(async (entity) => {
+                // skip network fetch if we already have geometry
+                if (entity.geometry) return;
                 const { id, name } = entity; // Destructure to get id and name
 
                 if (!layersRef.current[id]) {
@@ -140,7 +175,12 @@ const MapLayer = ({ entities, type, polygonsVisible, markersVisible, onEntityErr
                         const result_polygon = await fetchDataForEntity(1, id, controllerRef.current);
                         const result_point = await fetchDataForEntity(0, id, controllerRef.current);
                         if (!layersRef.current[id]) {
-                            const { data: data_polygon, name: fetchedName } = result_polygon;
+                            let { data: data_polygon, name: fetchedName } = result_polygon;
+                            // simplify fetched polygon
+                            data_polygon = {
+                                ...data_polygon,
+                                features: data_polygon.features.map(f => simplify(f, { tolerance: 0.001, highQuality: false }))
+                            };
                             const { data: data_point } = result_point;
                             const pointCoordinates = data_point?.features?.[0]?.geometry?.type === 'Point'
                                 ? data_point.features[0].geometry.coordinates
@@ -191,6 +231,8 @@ const MapLayer = ({ entities, type, polygonsVisible, markersVisible, onEntityErr
                                     marker.addTo(map);
                                 }
                                 onUpdateEntityName(id, fetchedName || name);
+                                // cache simplified geometry upstream
+                                onUpdateGeometry(layerId, id, data_polygon.features[0].geometry);
 
                             } else {
                                 setWarning(`Entity "${name}" not found.`);
@@ -260,4 +302,3 @@ const MapLayer = ({ entities, type, polygonsVisible, markersVisible, onEntityErr
 };
 
 export default MapLayer;
-

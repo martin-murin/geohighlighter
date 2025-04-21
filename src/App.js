@@ -6,6 +6,20 @@ import MapComponent from './components/MapComponent';
 import './App.css'
 import { get, set } from 'idb-keyval';
 
+// Normalize loaded layers to ensure valid GeoJSON Feature shape
+const normalizeLayers = (layersArr) => layersArr.map(layer => ({
+    ...layer,
+    featureCollection: {
+        type: 'FeatureCollection',
+        features: (layer.featureCollection?.features || []).map(f => ({
+            type: 'Feature',
+            id: f.id,
+            geometry: f.geometry,
+            properties: f.properties || { name: f.name, notes: '' }
+        }))
+    }
+}));
+
 function App() {
     const [layers, setLayers] = useState([]);
     // track first render to skip initial empty save
@@ -17,23 +31,30 @@ function App() {
             try {
                 data = await get('layers');
                 console.log('loadData: fetched from IndexedDB', data);
-                if (data) {
+                // only accept non-empty arrays
+                if (Array.isArray(data) && data.length > 0) {
+                    data = normalizeLayers(data);
                     setLayers(data);
                     return;
                 }
             } catch (error) {
                 console.error('IndexedDB error reading layers:', error);
             }
+            // localStorage fallback
             if (window.localStorage) {
                 const lsData = localStorage.getItem('layers');
                 if (lsData) {
                     try {
-                        const parsed = JSON.parse(lsData);
-                        console.log('loadData: migrating from localStorage', parsed);
-                        setLayers(parsed);
-                        try { await set('layers', parsed); } catch(err) { console.error('Error migrating layers to IndexedDB', err); }
-                        localStorage.removeItem('layers');
-                        return;
+                        let parsed = JSON.parse(lsData);
+                        console.log('loadData: fetched from localStorage', parsed);
+                        // only accept non-empty arrays
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            parsed = normalizeLayers(parsed);
+                            setLayers(parsed);
+                            await set('layers', parsed);
+                            localStorage.removeItem('layers');
+                            return;
+                        }
                     } catch (e) {
                         console.error('Error parsing localStorage layers:', e);
                     }
@@ -42,9 +63,10 @@ function App() {
             console.log('loadData: loading default JSON');
             try {
                 const response = await fetch(`${process.env.PUBLIC_URL}/layers_default.json`);
-                const defaultData = await response.json();
+                let defaultData = await response.json();
+                defaultData = normalizeLayers(defaultData);
                 setLayers(defaultData);
-                try { await set('layers', defaultData); } catch(err) { console.error('Error saving default layers to IndexedDB', err); }
+                await set('layers', defaultData);
             } catch (error) {
                 console.error('Error loading default layers:', error);
             }
@@ -77,10 +99,13 @@ function App() {
             if (layer.id === layerId) {
                 return {
                     ...layer,
-                    entities: [
-                        ...layer.entities,
-                        { id: newEntity.id, name: newEntity.name}
-                    ]
+                    featureCollection: {
+                        ...layer.featureCollection,
+                        features: [
+                            ...layer.featureCollection.features,
+                            { type: 'Feature', id: newEntity.id, geometry: null, properties: { name: newEntity.name, notes: '' } }
+                        ]
+                    }
                 };
             }
             return layer;
@@ -88,15 +113,23 @@ function App() {
     };
 
     const removeEntityFromLayer = (layerId, entityId) => {
-        setLayers(layers.map(layer => {
-            if (layer.id === layerId) {
-                return {
-                    ...layer,
-                    entities: layer.entities.filter(entity => entity.id !== entityId)
-                };
-            }
-            return layer;
-        }));
+        setLayers(prevLayers => {
+            const newLayers = prevLayers.map(layer => {
+                if (layer.id === layerId) {
+                    return {
+                        ...layer,
+                        featureCollection: {
+                            ...layer.featureCollection,
+                            features: layer.featureCollection.features.filter(entity => entity.id !== entityId)
+                        }
+                    };
+                }
+                return layer;
+            });
+            // immediate persistence to IndexedDB
+            set('layers', newLayers).catch(err => console.error('IndexedDB error saving after deletion:', err));
+            return newLayers;
+        });
     };
 
     const togglePolygonVisibility = (layerId) => {
@@ -118,7 +151,10 @@ function App() {
         const newLayer = {
             id: Date.now(),
             name,
-            entities: [],
+            featureCollection: {
+                type: 'FeatureCollection',
+                features: []
+            },
             polygonsVisible: true,
             markersVisible: true,
             fillColor: {rgb: { r: 0, g: 0, b: 0, a: 0.2,}, hex: "#000000"} ,
@@ -138,7 +174,10 @@ function App() {
                 if (layer.id === layerId) {
                     return {
                         ...layer,
-                        entities: layer.entities.filter(e => e.id !== entityId),
+                        featureCollection: {
+                            ...layer.featureCollection,
+                            features: layer.featureCollection.features.filter(e => e.id !== entityId),
+                        },
                     };
                 }
                 return layer;
@@ -155,17 +194,20 @@ function App() {
                 ...otherLayers,
                 {
                     ...layer,
-                    entities: [],
+                    featureCollection: {
+                        ...layer.featureCollection,
+                        features: []
+                    }
                 },
             ];
         });
 
         const layer = layers.find(l => l.id === layerId);
-        layer.entities.forEach((entity, index) => {
+        layer.featureCollection.features.forEach((entity, index) => {
             setTimeout(() => {
                 setLayers(prevLayers =>
                     prevLayers.map(l =>
-                        l.id === layerId ? { ...l, entities: [...l.entities, entity] } : l
+                        l.id === layerId ? { ...l, featureCollection: { ...l.featureCollection, features: [...l.featureCollection.features, entity] } } : l
                     )
                 );
             }, 5000);
@@ -193,13 +235,30 @@ function App() {
             if (layer.id === layerId) {
                 return {
                     ...layer,
-                    entities: layer.entities.map(entity =>
-                        entity.id === entityId ? { ...entity, name: newName } : entity
-                    )
+                    featureCollection: {
+                        ...layer.featureCollection,
+                        features: layer.featureCollection.features.map(entity =>
+                            entity.id === entityId ? { ...entity, properties: { ...entity.properties, name: newName } } : entity
+                        )
+                    }
                 };
             }
             return layer;
         }));
+    };
+
+    const handleUpdateFeatureGeometry = (layerId, featureId, geometry) => {
+        setLayers(prev => prev.map(layer => layer.id === layerId
+            ? { ...layer,
+                featureCollection: {
+                    ...layer.featureCollection,
+                    features: layer.featureCollection.features.map(f =>
+                        f.id === featureId ? { ...f, geometry } : f
+                    )
+                }
+            }
+            : layer
+        ));
     };
 
     const handleExport = () => {
@@ -259,7 +318,12 @@ function App() {
                     </div>
                 </div>
                 <div className="col-md-9 col-sm-12" style={{ height: "100vh" }}>
-                    <MapComponent layers={layers} handleEntityError={handleEntityError} handleUpdateEntityName={handleUpdateEntityName} />
+                    <MapComponent
+                        layers={layers}
+                        handleEntityError={handleEntityError}
+                        handleUpdateEntityName={handleUpdateEntityName}
+                        handleGeometryUpdate={handleUpdateFeatureGeometry}
+                    />
                 </div>
             </div>
         </div>
