@@ -371,6 +371,7 @@ function App() {
                         onFillColorChange={handleFillColorChange}
                         onBorderColorChange={handleBorderColorChange}
                         onFileImport={handleFileImport}
+                        onUpdateEntityName={handleUpdateEntityName}
                     />
                     </div>
                 </div>
