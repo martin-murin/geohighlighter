@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ColorPicker from './ColorPicker';
 import './LayerControls.css'
 
-const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange }) => {
+const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport }) => {
     const [newEntityId, setNewEntityId] = useState('');
     const [currentFillColor, setCurrentFillColor] = useState(layer.fillColor);
     const [currentBorderColor, setCurrentBorderColor] = useState(layer.borderColor);
@@ -86,18 +86,36 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
                     </div>
                 </div>
                 <div className="row mx-2">
-                    <input
-                    className="form-control col-12"
-                    type="text"
-                    placeholder={`Add entity`}
-                    value={newEntityId}
-                    onChange={(e) => setNewEntityId(e.target.value)}
-                    onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                            handleAddEntity();
-                        }
-                    }}
-                    />
+                    <div className="col-12 col-lg-10 mb-2">
+                        <input
+                            className="form-control"
+                            type="text"
+                            placeholder={`Add entity`}
+                            value={newEntityId}
+                            onChange={(e) => setNewEntityId(e.target.value)}
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                    handleAddEntity();
+                                }
+                            }}
+                        />
+                    </div>
+                    <div className="col-2 mb-2">
+                        <label
+                            className="btn btn-secondary btn-sm"
+                            htmlFor={`import-file-${layer.id}`}
+                            title="Import GPX/KML"
+                        >
+                            <i className="bi bi-upload"></i>
+                        </label>
+                        <input
+                            id={`import-file-${layer.id}`}
+                            type="file"
+                            accept=".gpx,.kml"
+                            className="form-control d-none"
+                            onChange={(e) => onFileImport(layer.id, e)}
+                        />
+                    </div>
                 </div>
             </div>
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import LayerControls from './LayerControls'; // Assuming you have a separate component for layer controls
 import { Button, Form, FormControl, InputGroup, Dropdown } from 'react-bootstrap';
 
-const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onAddLayer, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange}) => {
+const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onAddLayer, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport}) => {
     const [newLayerName, setNewLayerName] = useState('');
     const [newLayerType, setNewLayerType] = useState('country');
 
@@ -28,6 +28,7 @@ const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onTogglePolygonVisibilit
                         onForceRender={onForceRender}
                         onFillColorChange={onFillColorChange}
                         onBorderColorChange={onBorderColorChange}
+                        onFileImport={onFileImport}
                     />
                 ))}
                 <div className="new-layer mt-4 mb-4 mx-2">
@@ -51,4 +52,3 @@ const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onTogglePolygonVisibilit
 };
 
 export default Sidebar;
-

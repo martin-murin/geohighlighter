@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar';
 import MapComponent from './components/MapComponent';
 import './App.css'
 import { get, set } from 'idb-keyval';
+import { gpx, kml } from 'togeojson';
 
 // Normalize loaded layers to ensure valid GeoJSON Feature shape
 const normalizeLayers = (layersArr) => layersArr.map(layer => ({
@@ -282,6 +283,49 @@ function App() {
         reader.readAsText(file);
     };
 
+    const handleFileImport = (layerId, event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const text = e.target.result;
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(text, 'application/xml');
+                let fc;
+                if (file.name.toLowerCase().endsWith('.gpx')) {
+                    fc = gpx(xml);
+                } else if (file.name.toLowerCase().endsWith('.kml')) {
+                    fc = kml(xml);
+                } else {
+                    console.error('Unsupported file type');
+                    return;
+                }
+                const newFeatures = fc.features.map((feature, idx) => ({
+                    type: 'Feature',
+                    id: `${layerId}-import-${Date.now()}-${idx}`,
+                    geometry: feature.geometry,
+                    properties: feature.properties || {}
+                }));
+                setLayers(prevLayers => prevLayers.map(layer =>
+                    layer.id === layerId
+                        ? {
+                            ...layer,
+                            featureCollection: {
+                                ...layer.featureCollection,
+                                features: [...layer.featureCollection.features, ...newFeatures]
+                            }
+                        }
+                        : layer
+                ));
+            } catch (err) {
+                console.error('Error parsing file', err);
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = null;
+    };
+
     return (
         <div className="container-fluid">
             <div className="row">
@@ -314,6 +358,7 @@ function App() {
                         onForceRender={handleForceRender}
                         onFillColorChange={handleFillColorChange}
                         onBorderColorChange={handleBorderColorChange}
+                        onFileImport={handleFileImport}
                     />
                     </div>
                 </div>
