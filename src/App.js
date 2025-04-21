@@ -96,16 +96,28 @@ function App() {
     }, [layers]);
 
     const addEntityToLayer = (layerId, newEntity) => {
-        setLayers(layers.map(layer => {
+        setLayers(prevLayers => prevLayers.map(layer => {
             if (layer.id === layerId) {
+                // avoid duplicates
+                if (layer.featureCollection.features.some(f => f.id === newEntity.id)) {
+                    return layer;
+                }
+                const newFeature = {
+                    type: 'Feature',
+                    id: newEntity.id,
+                    geometry: newEntity.geometry ?? null,
+                    properties: {
+                        name: newEntity.name,
+                        notes: '',
+                        ...(newEntity.osm_type && { osm_type: newEntity.osm_type }),
+                        ...(newEntity.osm_id && { osm_id: newEntity.osm_id })
+                    }
+                };
                 return {
                     ...layer,
                     featureCollection: {
                         ...layer.featureCollection,
-                        features: [
-                            ...layer.featureCollection.features,
-                            { type: 'Feature', id: newEntity.id, geometry: null, properties: { name: newEntity.name, notes: '' } }
-                        ]
+                        features: [...layer.featureCollection.features, newFeature]
                     }
                 };
             }

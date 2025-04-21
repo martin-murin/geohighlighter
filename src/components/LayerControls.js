@@ -3,23 +3,26 @@ import ColorPicker from './ColorPicker';
 import './LayerControls.css'
 
 const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport }) => {
-    const [newEntityId, setNewEntityId] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState(null);
     const [currentFillColor, setCurrentFillColor] = useState(layer.fillColor);
     const [currentBorderColor, setCurrentBorderColor] = useState(layer.borderColor);
 
     // safely get feature list
     const featuresList = layer.featureCollection?.features ?? [];
 
-    const handleAddEntity = () => {
-        if (newEntityId) {
-            const newEntity = {
-                id: newEntityId,
-                name: newEntityId
-            }
-            onAddEntity(layer.id, newEntity);
-            setNewEntityId('');
+    useEffect(() => {
+        if (searchQuery.length < 3) {
+            setSuggestions([]);
+            return;
         }
-    };
+        const handler = setTimeout(() => {
+            fetchSuggestions(searchQuery);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchQuery]);
 
     useEffect(() => {
         setCurrentFillColor(layer.fillColor);
@@ -28,6 +31,42 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
     useEffect(() => {
         setCurrentBorderColor(layer.borderColor);
     }, [layer.borderColor]);
+
+    const fetchSuggestions = async (query) => {
+        setIsSearching(true);
+        setSearchError(null);
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            setSuggestions(data);
+        } catch (err) {
+            console.error(err);
+            setSearchError('Error fetching suggestions');
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleSelectSuggestion = async (s) => {
+        setSuggestions([]);
+        setSearchQuery('');
+        setIsSearching(true);
+        setSearchError(null);
+        try {
+            const prefix = s.osm_type === 'node' ? 'N' : s.osm_type === 'way' ? 'W' : 'R';
+            const lookupUrl = `https://nominatim.openstreetmap.org/lookup?osm_ids=${prefix}${s.osm_id}&format=json&polygon_geojson=1`;
+            const res = await fetch(lookupUrl);
+            const data = await res.json();
+            if (!data.length) throw new Error('No geometry data');
+            const geojson = data[0].geojson;
+            onAddEntity(layer.id, { id: `${s.osm_type}-${s.osm_id}`, name: s.display_name, geometry: geojson, osm_type: s.osm_type, osm_id: s.osm_id });
+        } catch (err) {
+            console.error(err);
+            setSearchError('Error fetching geometry');
+        } finally {
+            setIsSearching(false);
+        }
+    };
 
     const handleFillColorChange = (fillColor) => {
         setCurrentFillColor(fillColor);
@@ -86,19 +125,25 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
                     </div>
                 </div>
                 <div className="row mx-2">
-                    <div className="col-12 col-lg-10 mb-2">
+                    <div className="col-12 col-lg-10 mb-2" style={{ position: 'relative' }}>
                         <input
                             className="form-control"
                             type="text"
-                            placeholder={`Add entity`}
-                            value={newEntityId}
-                            onChange={(e) => setNewEntityId(e.target.value)}
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                    handleAddEntity();
-                                }
-                            }}
+                            placeholder="Search OSM..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
+                        {searchError && <div className="text-danger">{searchError}</div>}
+                        {suggestions.length > 0 && (
+                            <ul className="list-group position-absolute" style={{ zIndex: 1000, width: '100%' }}>
+                                {suggestions.map((s, idx) => (
+                                    <li key={idx} className="list-group-item list-group-item-action" onClick={() => handleSelectSuggestion(s)}>
+                                        <strong>{s.display_name}</strong><br/>
+                                        <small>{s.type} (osm {s.osm_type} {s.osm_id})</small>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                     <div className="col-2 mb-2">
                         <label
