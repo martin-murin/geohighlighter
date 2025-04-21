@@ -27,6 +27,8 @@ function App() {
     const [layers, setLayers] = useState([]);
     // track first render to skip initial empty save
     const isInitialMount = useRef(true);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
     useEffect(() => {
         const loadData = async () => {
@@ -358,43 +360,51 @@ function App() {
 
     return (
         <div className="container-fluid">
+            {/* Mobile toggle for sidebar */}
+            <div className="d-flex d-md-none justify-content-end p-2">
+                <button className="btn btn-light" onClick={toggleSidebar} aria-label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}>
+                    <i className={`bi bi-chevron-${sidebarOpen ? 'up' : 'down'}`}></i>
+                </button>
+            </div>
             <div className="row">
-                <div className="col-md-3 col-sm-12 mt-4 text-center">
-                    <h2>Map Highlighter</h2>
-                    <div className="row">
-                        <div className="col-md-6 col-sm-12 mt-2 mb-2">
-                            <button className="btn btn-primary mx-2" onClick={handleExport}>Export Layers</button>
+                {sidebarOpen && (
+                    <div className="col-md-3 col-12 px-3 mt-4">
+                        <div className="text-center mb-3">
+                            <h2>Map Highlighter</h2>
+                            <div className="row">
+                                <div className="col-6 mt-2 mb-2">
+                                    <button className="btn btn-primary w-100" onClick={handleExport}>Export Layers</button>
+                                </div>
+                                <div className="col-6 mt-2 mb-2">
+                                    <label className="btn btn-primary w-100" htmlFor="import-file">Import Layers</label>
+                                    <input id="import-file" type="file" onChange={handleImport} accept=".json" className="d-none" />
+                                </div>
+                            </div>
                         </div>
-                        <div className="col-md-6 col-sm-12 mt-2 mb-2">
-                            <label className="btn btn-primary mx-2" htmlFor="import-file">Import Layers</label>
-                            <input
-                                id="import-file"
-                                className="form-control d-none"
-                                type="file"
-                                onChange={handleImport}
-                                accept=".json"
+                        <div className="scrollable px-2">
+                            <Sidebar
+                                layers={layers}
+                                onAddEntity={addEntityToLayer}
+                                onRemoveEntity={removeEntityFromLayer}
+                                onTogglePolygonVisibility={togglePolygonVisibility}
+                                onToggleMarkerVisibility={toggleMarkerVisibility}
+                                onAddLayer={addNewLayer}
+                                onRemoveLayer={handleRemoveLayer}
+                                onForceRender={handleForceRender}
+                                onFillColorChange={handleFillColorChange}
+                                onBorderColorChange={handleBorderColorChange}
+                                onFileImport={handleFileImport}
+                                onUpdateEntityName={handleUpdateEntityName}
                             />
                         </div>
                     </div>
-                    <div className="mt-2 scrollable">
-                    <Sidebar
-                        layers={layers}
-                        onAddEntity={addEntityToLayer}
-                        onRemoveEntity={removeEntityFromLayer}
-                        onTogglePolygonVisibility={togglePolygonVisibility}
-                        onToggleMarkerVisibility={toggleMarkerVisibility}
-                        onAddLayer={addNewLayer}
-                        onRemoveLayer={handleRemoveLayer}
-                        onForceRender={handleForceRender}
-                        onFillColorChange={handleFillColorChange}
-                        onBorderColorChange={handleBorderColorChange}
-                        onFileImport={handleFileImport}
-                        onUpdateEntityName={handleUpdateEntityName}
-                    />
-                    </div>
+                )}
+                {/* Desktop toggle */}
+                <div className="col-auto d-none d-md-flex align-items-center justify-content-center" onClick={toggleSidebar} style={{ cursor: 'pointer' }} aria-label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}>
+                    <i className={`bi bi-chevron-${sidebarOpen ? 'left' : 'right'}`}></i>
                 </div>
-                <div className="col-md-9 col-sm-12" style={{ height: "100vh" }}>
-                    <MapComponent
+                <div className="col p-0" style={{ height: '100vh' }}>
+                    <MapComponent key={`map-${sidebarOpen}`} 
                         layers={layers}
                         handleEntityError={handleEntityError}
                         handleUpdateEntityName={handleUpdateEntityName}

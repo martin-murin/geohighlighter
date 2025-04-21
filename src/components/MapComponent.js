@@ -10,6 +10,7 @@ const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName, handl
             center={[48, 17]}
             zoom={5}
             style={{ height: "100%", width: "100%" }}
+            whenCreated={map => { setTimeout(() => map.invalidateSize(), 0); }}
         >
             <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
