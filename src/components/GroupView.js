@@ -85,7 +85,7 @@ const GroupView = ({
             {(provided) => (
               <div ref={provided.innerRef} {...provided.droppableProps}>
                 {groupLayers.map((layer, index) => (
-                  <Draggable key={layer.id} draggableId={String(layer.id)} index={index} disableInteractiveElementBlocking>
+                  <Draggable key={layer.id} draggableId={String(layer.id)} index={index}>
                     {(provided2) => (
                       <div
                         ref={provided2.innerRef}

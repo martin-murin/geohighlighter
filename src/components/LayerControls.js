@@ -118,6 +118,8 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
                         placeholder="Search OSM..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
                     />
                     {searchError && <div className="text-danger">{searchError}</div>}
                     {suggestions.length > 0 && (
