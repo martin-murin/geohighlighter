@@ -8,8 +8,13 @@
     left: 0;
 }
 
+.layer-controls {
+    border-left: 2px solid transparent;
+    transition: background-color 0.2s ease-in-out, border-left-color 0.2s ease-in-out, padding-left 0.2s ease-in-out;
+}
+
 .layer-controls.layer-hovered {
   background-color: rgba(13, 110, 253, 0.05);
-  border-left: 2px solid #0d6efd;
+  border-left-color: #0d6efd;
   padding-left: 0.25rem;
 }
