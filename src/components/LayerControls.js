@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ColorPicker from './ColorPicker';
 import './LayerControls.css'
+import { Dropdown } from 'react-bootstrap';
 
-const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport, onUpdateEntityName }) => {
+const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport, onUpdateEntityName, onRenameLayer }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -82,43 +83,32 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
 
     return (
         <div className="layer-controls">
-            <div className="mt-2 mb-2 mx-2">
-                <div className="row mt-4">
-                    <h5 className="col-12">{layer.name}</h5>
-                </div>
-                <div className="row g-2 align-items-center">
-                    <div className="col-12 col-lg-2 mb-2 mb-lg-0">
-                        <div className="color-picker-container" style={{ position: 'relative' }}>
-                            <ColorPicker color={currentFillColor} onChange={handleFillColorChange} pickerType="fill" />
-                        </div>
-                    </div>
-                    <div className="col-12 col-lg-2 mb-2 mb-lg-0">
-                        <div className="color-picker-container" style={{ position: 'relative' }}>
-                            <ColorPicker color={currentBorderColor} onChange={handleBorderColorChange} pickerType="border" />
-                        </div>
-                    </div>
-                    <div className="col-12 col-lg-3 mb-2 mb-lg-0">
-                        <button className="btn btn-secondary btn-sm w-100" onClick={() => onTogglePolygonVisibility(layer.id)}>
-                            {layer.polygonsVisible 
-                              ? <i className="bi bi-map-fill"></i>
-                              : <i className="bi bi-map"></i>
-                            }
-                        </button>
-                    </div>
-                    <div className="col-12 col-lg-3 mb-2 mb-lg-0">
-                        <button className="btn btn-secondary btn-sm w-100" onClick={() => onToggleMarkerVisibility(layer.id)}>
-                            {layer.markersVisible
-                              ? <i className="bi bi-geo-alt-fill"></i>
-                              : <i className="bi bi-geo-alt"></i>
-                            }
-                        </button>
-                    </div>
-                    <div className="col-12 col-lg-2 mb-2 mb-lg-0">
-                        <button className="btn btn-danger btn-sm w-100" title="Delete Layer" onClick={() => onRemoveLayer(layer.id)}>
-                            &times;
-                        </button>
-                    </div>
-                </div>
+            <div className="d-flex justify-content-between align-items-center px-2 py-1">
+                <h5 className="mb-0">{layer.name}</h5>
+                <Dropdown align="end">
+                    <Dropdown.Toggle variant="light" size="sm">
+                        <i className="bi bi-list"></i>
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                        <Dropdown.Item onClick={() => {
+                            const newName = prompt('Rename Layer', layer.name);
+                            if (newName) onRenameLayer(layer.id, newName);
+                        }}>
+                            <i className="bi bi-pencil me-2"></i> Rename Layer
+                        </Dropdown.Item>
+                        <Dropdown.Divider />
+                        <Dropdown.Item onClick={() => onTogglePolygonVisibility(layer.id)}>
+                            {layer.polygonsVisible ? <><i className="bi bi-map-fill me-2" /> Hide Polygons</> : <><i className="bi bi-map me-2" /> Show Polygons</>}
+                        </Dropdown.Item>
+                        <Dropdown.Item onClick={() => onToggleMarkerVisibility(layer.id)}>
+                            {layer.markersVisible ? <><i className="bi bi-geo-alt-fill me-2" /> Hide Markers</> : <><i className="bi bi-geo-alt me-2" /> Show Markers</>}
+                        </Dropdown.Item>
+                        <Dropdown.Divider />
+                        <Dropdown.Item onClick={() => onRemoveLayer(layer.id)} className="text-danger">
+                            <i className="bi bi-trash me-2"></i> Delete Layer
+                        </Dropdown.Item>
+                    </Dropdown.Menu>
+                </Dropdown>
             </div>
             <div className="row mx-2">
                 <div className="col-12 col-lg-10 mb-2" style={{ position: 'relative' }}>

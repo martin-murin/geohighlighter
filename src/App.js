@@ -476,6 +476,8 @@ function App() {
         setGroups(prev => drop(prev));
     };
 
+    const handleRenameLayer = (layerId, newName) => setLayers(prev => prev.map(l => l.id === layerId ? { ...l, name: newName } : l));
+
     return (
         <div className="container-fluid">
             {/* Mobile toggle for sidebar */}
@@ -517,6 +519,7 @@ function App() {
                                 onBorderColorChange={handleBorderColorChange}
                                 onFileImport={handleFileImport}
                                 onUpdateEntityName={handleUpdateEntityName}
+                                onRenameLayer={handleRenameLayer}
                             />
                         </div>
                     </div>
