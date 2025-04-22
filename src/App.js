@@ -25,6 +25,7 @@ const normalizeLayers = (layersArr) => layersArr.map(layer => ({
 
 function App() {
     const [layers, setLayers] = useState([]);
+    const [groups, setGroups] = useState([]);
     // track first render to skip initial empty save
     const isInitialMount = useRef(true);
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -80,6 +81,20 @@ function App() {
     }, []);
 
     useEffect(() => {
+        const loadGroups = async () => {
+            try {
+                const stored = await get('groups');
+                if (Array.isArray(stored) && stored.length) setGroups(stored);
+                else setGroups([{ id: uuidv4(), name: 'Root', path: '', subgroups: [] }]);
+            } catch (e) {
+                console.error('Load groups error', e);
+                setGroups([{ id: uuidv4(), name: 'Root', path: '', subgroups: [] }]);
+            }
+        };
+        loadGroups();
+    }, []);
+
+    useEffect(() => {
         // skip save on initial mount
         if (isInitialMount.current) {
             isInitialMount.current = false;
@@ -98,6 +113,10 @@ function App() {
         };
         saveData();
     }, [layers]);
+
+    useEffect(() => {
+        set('groups', groups).catch(err => console.error('Save groups error', err));
+    }, [groups]);
 
     const addEntityToLayer = (layerId, newEntity) => {
         setLayers(prevLayers => prevLayers.map(layer => {
@@ -186,10 +205,11 @@ function App() {
         ));
     };
 
-    const addNewLayer = (name) => {
+    const addNewLayer = (name, path = '') => {
         const newLayer = {
             id: Date.now(),
             name,
+            path,
             featureCollection: {
                 type: 'FeatureCollection',
                 features: []
@@ -358,6 +378,57 @@ function App() {
         event.target.value = null;
     };
 
+    const handleAddGroup = (parentPath, name) => {
+        setGroups(prev => {
+            // Deep clone groups tree
+            const tree = JSON.parse(JSON.stringify(prev));
+            // New subgroup to insert
+            const newGroup = { id: uuidv4(), name, path: parentPath ? `${parentPath}/${name}` : name, subgroups: [] };
+            // Recursive insertion: find matching parentPath
+            const insert = (nodes) => {
+                for (const node of nodes) {
+                    if (node.path === parentPath) {
+                        node.subgroups = node.subgroups || [];
+                        node.subgroups.push(newGroup);
+                        return true;
+                    }
+                    if (node.subgroups && insert(node.subgroups)) return true;
+                }
+                return false;
+            };
+            insert(tree);
+            return tree;
+        });
+    };
+
+    const handleRenameGroup = (path, newName) => {
+        setGroups(prev => {
+            const tree = JSON.parse(JSON.stringify(prev));
+            const update = (nodes) => nodes.forEach(g => {
+                if (g.path === path) {
+                    const parts = g.path.split('/'); parts[parts.length-1] = newName;
+                    const newPath = parts.join('/'); g.name = newName; g.path = newPath;
+                    const fix = subs => subs.forEach(s => {
+                        s.path = s.path.replace(`${path}/`, `${newPath}/`);
+                        fix(s.subgroups || []);
+                    });
+                    fix(g.subgroups || []);
+                } else update(g.subgroups || []);
+            });
+            update(tree);
+            return tree;
+        });
+    };
+
+    const handleRemoveGroup = (path) => {
+        const drop = (nodes) => nodes.filter(g => {
+            if (g.path === path) return false;
+            g.subgroups = drop(g.subgroups || []);
+            return true;
+        });
+        setGroups(prev => drop(prev));
+    };
+
     return (
         <div className="container-fluid">
             {/* Mobile toggle for sidebar */}
@@ -383,6 +454,10 @@ function App() {
                         </div>
                         <div className="scrollable px-2">
                             <Sidebar
+                                groups={groups}
+                                onAddGroup={handleAddGroup}
+                                onRenameGroup={handleRenameGroup}
+                                onRemoveGroup={handleRemoveGroup}
                                 layers={layers}
                                 onAddEntity={addEntityToLayer}
                                 onRemoveEntity={removeEntityFromLayer}

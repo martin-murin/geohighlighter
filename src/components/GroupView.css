@@ -1,0 +1,21 @@
+/* Styles for nested group visual cues */
+.group-header:hover {
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+.group-children {
+  margin-left: 1rem;
+  padding-left: 0.5rem;
+  position: relative;
+}
+
+.group-children::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background-color: rgba(13, 110, 253, 0.4);
+  border-radius: 1px;
+}

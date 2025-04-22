@@ -1,25 +1,19 @@
-import React, { useState } from 'react';
-import LayerControls from './LayerControls'; // Assuming you have a separate component for layer controls
-import { Button, Form, FormControl, InputGroup, Dropdown } from 'react-bootstrap';
+import React from 'react';
+import GroupView from './GroupView';
 
-const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onAddLayer, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport, onUpdateEntityName }) => {
-    const [newLayerName, setNewLayerName] = useState('');
-    const [newLayerType, setNewLayerType] = useState('country');
-
-    const handleAddNewLayer = () => {
-        if (newLayerName.trim()) {
-            onAddLayer(newLayerName);
-            setNewLayerName('');
-        }
-    };
-
+const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onAddLayer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport, onUpdateEntityName }) => {
     return (
         <div className="row">
-            <div className="sidebar col-12 text-center">
-                {layers.map(layer => (
-                    <LayerControls
-                        key={layer.id}
-                        layer={layer}
+            <div className="sidebar col-12 text-start">
+                {groups.map(group => (
+                    <GroupView
+                        key={group.path}
+                        group={group}
+                        layers={layers}
+                        onAddGroup={onAddGroup}
+                        onRenameGroup={onRenameGroup}
+                        onRemoveGroup={onRemoveGroup}
+                        onAddLayer={onAddLayer}
                         onAddEntity={onAddEntity}
                         onRemoveEntity={onRemoveEntity}
                         onTogglePolygonVisibility={onTogglePolygonVisibility}
@@ -32,21 +26,6 @@ const Sidebar = ({ layers, onAddEntity, onRemoveEntity, onTogglePolygonVisibilit
                         onUpdateEntityName={onUpdateEntityName}
                     />
                 ))}
-                <div className="new-layer mt-4 mb-4 mx-2">
-                    <h3>Create New Layer</h3>
-                        <input
-                        className="form-control col-12"
-                        type="text"
-                        placeholder={`Layer Name`}
-                        value={newLayerName}
-                        onChange={(e) => setNewLayerName(e.target.value)}
-                        onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                                handleAddNewLayer();
-                            }
-                        }}
-                        />
-                </div>
             </div>
         </div>
     );
