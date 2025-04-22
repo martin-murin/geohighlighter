@@ -12,6 +12,8 @@ import hash from 'object-hash';
 // Normalize loaded layers to ensure valid GeoJSON Feature shape
 const normalizeLayers = (layersArr) => layersArr.map(layer => ({
     ...layer,
+    // ensure every layer has a path (default to root)
+    path: layer.path || '',
     featureCollection: {
         type: 'FeatureCollection',
         features: (layer.featureCollection?.features || []).map(f => ({
@@ -30,6 +32,10 @@ function App() {
     const isInitialMount = useRef(true);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const toggleSidebar = () => setSidebarOpen(prev => !prev);
+    // track if we’ve synced groups to layers
+    const hasSyncedGroupsRef = useRef(false);
+    // skip saving groups on initial mount to avoid clearing DB
+    const isGroupsInitialMount = useRef(true);
 
     useEffect(() => {
         const loadData = async () => {
@@ -115,8 +121,38 @@ function App() {
     }, [layers]);
 
     useEffect(() => {
+        if (isGroupsInitialMount.current) {
+            isGroupsInitialMount.current = false;
+            return;
+        }
         set('groups', groups).catch(err => console.error('Save groups error', err));
     }, [groups]);
+
+    // Sync any missing groups based on loaded layers (orphan layers get their groups created under root)
+    useEffect(() => {
+      if (!hasSyncedGroupsRef.current) {
+        hasSyncedGroupsRef.current = true;
+        setGroups(prev => {
+          const tree = JSON.parse(JSON.stringify(prev));
+          const layerPaths = Array.from(new Set(layers.map(l => l.path).filter(p => p)));
+          layerPaths.forEach(path => {
+            const segs = path.split('/').filter(Boolean);
+            let nodes = tree;
+            let curr = '';
+            segs.forEach(seg => {
+              curr = curr ? `${curr}/${seg}` : seg;
+              let g = nodes.find(x => x.path === curr);
+              if (!g) {
+                g = { id: uuidv4(), name: seg, path: curr, subgroups: [] };
+                nodes.push(g);
+              }
+              nodes = g.subgroups;
+            });
+          });
+          return tree;
+        });
+      }
+    }, [layers]);
 
     const addEntityToLayer = (layerId, newEntity) => {
         setLayers(prevLayers => prevLayers.map(layer => {
@@ -321,12 +357,12 @@ function App() {
     };
 
     const handleExport = () => {
-        const dataToExport = JSON.stringify(layers);
+        const dataToExport = JSON.stringify({ layers, groups }, null, 2);
         const blob = new Blob([dataToExport], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'layers_export.json';
+        a.download = 'export.json';
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -335,8 +371,19 @@ function App() {
         const file = event.target.files[0];
         const reader = new FileReader();
         reader.onload = (e) => {
-            const importedLayers = JSON.parse(e.target.result);
-            setLayers(importedLayers);
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data.layers && data.groups) {
+                    setLayers(data.layers);
+                    setGroups(data.groups);
+                } else if (Array.isArray(data)) {
+                    setLayers(data);
+                } else {
+                    console.warn('Imported JSON missing layers/groups');
+                }
+            } catch (err) {
+                console.error('Error importing JSON', err);
+            }
         };
         reader.readAsText(file);
     };
