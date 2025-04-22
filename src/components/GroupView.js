@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import LayerControls from './LayerControls';
 import './GroupView.css';
+import { Droppable, Draggable } from 'react-beautiful-dnd';
 
 const GroupView = ({
   group,
@@ -80,33 +81,51 @@ const GroupView = ({
               onHoverLayer={onHoverLayer}
             />
           ))}
-          {groupLayers.map(layer => (
-            <LayerControls
-              key={layer.id}
-              layer={layer}
-              onAddEntity={onAddEntity}
-              onRemoveEntity={onRemoveEntity}
-              onTogglePolygonVisibility={onTogglePolygonVisibility}
-              onToggleMarkerVisibility={onToggleMarkerVisibility}
-              onRemoveLayer={onRemoveLayer}
-              onForceRender={onForceRender}
-              onFillColorChange={onFillColorChange}
-              onBorderColorChange={onBorderColorChange}
-              onFileImport={onFileImport}
-              onUpdateEntityName={onUpdateEntityName}
-              onRenameLayer={onRenameLayer}
-              hoveredLayerId={hoveredLayerId}
-              onHoverLayer={onHoverLayer}
-            />
-          ))}
-          <div className="new-layer mt-3">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="New Layer"
-              onKeyPress={handleAddLayer}
-            />
-          </div>
+          <Droppable droppableId={group.path || 'root'} type="LAYER">
+            {(provided) => (
+              <div ref={provided.innerRef} {...provided.droppableProps}>
+                {groupLayers.map((layer, index) => (
+                  <Draggable key={layer.id} draggableId={String(layer.id)} index={index} disableInteractiveElementBlocking>
+                    {(provided2) => (
+                      <div
+                        ref={provided2.innerRef}
+                        {...provided2.draggableProps}
+                        {...provided2.dragHandleProps}
+                        style={provided2.draggableProps.style}
+                      >
+                        <LayerControls
+                          layer={layer}
+                          onAddEntity={onAddEntity}
+                          onRemoveEntity={onRemoveEntity}
+                          onTogglePolygonVisibility={onTogglePolygonVisibility}
+                          onToggleMarkerVisibility={onToggleMarkerVisibility}
+                          onRemoveLayer={onRemoveLayer}
+                          onForceRender={onForceRender}
+                          onFillColorChange={onFillColorChange}
+                          onBorderColorChange={onBorderColorChange}
+                          onFileImport={onFileImport}
+                          onUpdateEntityName={onUpdateEntityName}
+                          onRenameLayer={onRenameLayer}
+                          hoveredLayerId={hoveredLayerId}
+                          onHoverLayer={onHoverLayer}
+                        />
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+                {/* New layer input moved inside droppable for empty state drop area */}
+                <div className="new-layer mt-3">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="New Layer"
+                    onKeyPress={handleAddLayer}
+                  />
+                </div>
+              </div>
+            )}
+          </Droppable>
         </div>
       )}
     </div>

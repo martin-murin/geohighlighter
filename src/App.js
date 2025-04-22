@@ -481,6 +481,29 @@ function App() {
 
     const handleRenameLayer = (layerId, newName) => setLayers(prev => prev.map(l => l.id === layerId ? { ...l, name: newName } : l));
 
+    const handleDragEnd = (result) => {
+        const { source, destination, draggableId } = result;
+        if (!destination) return;
+        if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+        // update state via functional update; persistence in useEffect
+        setLayers(prevLayers => {
+            const newLayers = Array.from(prevLayers);
+            const id = !isNaN(Number(draggableId)) ? Number(draggableId) : draggableId;
+            const oldIndex = newLayers.findIndex(l => l.id === id);
+            if (oldIndex === -1) return prevLayers;
+            const [moved] = newLayers.splice(oldIndex, 1);
+            const destPath = destination.droppableId === 'root' ? '' : destination.droppableId;
+            moved.path = destPath;
+            const groupIdxs = newLayers.reduce((acc, l, idx) => { if (l.path === destPath) acc.push(idx); return acc; }, []);
+            const insertAt = destination.index < groupIdxs.length
+                ? groupIdxs[destination.index]
+                : (groupIdxs.length ? groupIdxs[groupIdxs.length - 1] + 1 : newLayers.length);
+            newLayers.splice(insertAt, 0, moved);
+            return newLayers;
+        });
+    };
+
     return (
         <div className="container-fluid">
             {/* Mobile toggle for sidebar */}
@@ -525,6 +548,7 @@ function App() {
                                 onRenameLayer={handleRenameLayer}
                                 hoveredLayerId={hoveredLayerId}
                                 onHoverLayer={handleHoverLayer}
+                                onDragEnd={handleDragEnd}
                             />
                         </div>
                     </div>
