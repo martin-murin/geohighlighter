@@ -12,6 +12,7 @@ import hash from 'object-hash';
 // Normalize loaded layers to ensure valid GeoJSON Feature shape
 const normalizeLayers = (layersArr) => layersArr.map(layer => ({
     ...layer,
+    markerIcon: layer.markerIcon || 'bi bi-geo-alt-fill',
     // ensure every layer has a path (default to root)
     path: layer.path || '',
     featureCollection: {
@@ -255,6 +256,7 @@ function App() {
             },
             polygonsVisible: true,
             markersVisible: true,
+            markerIcon: 'bi bi-geo-alt-fill',
             fillColor: {rgb: { r: 0, g: 0, b: 0, a: 0.2,}, hex: "#000000"} ,
             borderColor: {rgb: { r: 0, g: 0, b: 0, a: 0.8,}, hex: "#000000"} ,
         };
@@ -326,6 +328,10 @@ function App() {
                 layer.id === layerId ? { ...layer, borderColor } : layer
             )
         );
+    };
+
+    const handleMarkerIconChange = (layerId, markerIcon) => {
+        setLayers(prev => prev.map(layer => layer.id === layerId ? { ...layer, markerIcon } : layer));
     };
 
     const handleUpdateEntityName = (layerId, entityId, newName) => {
@@ -489,7 +495,7 @@ function App() {
             const srcStr = source.droppableId.replace('entities-', '');
             const dstStr = destination.droppableId.replace('entities-', '');
             const srcId = !isNaN(Number(srcStr)) ? Number(srcStr) : srcStr;
-            const dstId = !isNaN(Number(dstStr)) ? Number(dstStr) : dstStr;
+            const dstId = !isNaN(Number(dstStr)) ? Number(dstStr) : dstId;
             if (srcId === dstId) {
                 handleEntityReorder(srcId, result);
             } else {
@@ -587,15 +593,16 @@ function App() {
                                 onRenameGroup={handleRenameGroup}
                                 onRemoveGroup={handleRemoveGroup}
                                 layers={layers}
+                                onAddLayer={addNewLayer}
+                                onRemoveLayer={handleRemoveLayer}
+                                onForceRender={handleForceRender}
                                 onAddEntity={addEntityToLayer}
                                 onRemoveEntity={removeEntityFromLayer}
                                 onTogglePolygonVisibility={togglePolygonVisibility}
                                 onToggleMarkerVisibility={toggleMarkerVisibility}
-                                onAddLayer={addNewLayer}
-                                onRemoveLayer={handleRemoveLayer}
-                                onForceRender={handleForceRender}
                                 onFillColorChange={handleFillColorChange}
                                 onBorderColorChange={handleBorderColorChange}
+                                onMarkerIconChange={handleMarkerIconChange}
                                 onFileImport={handleFileImport}
                                 onUpdateEntityName={handleUpdateEntityName}
                                 onRenameLayer={handleRenameLayer}

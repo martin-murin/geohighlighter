@@ -2,7 +2,7 @@ import React from 'react';
 import { DragDropContext } from 'react-beautiful-dnd';
 import GroupView from './GroupView';
 
-const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onAddLayer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer, onDragEnd, onEntityReorder, onSortEntities }) => {
+const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onAddLayer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onMarkerIconChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer, onDragEnd, onEntityReorder, onSortEntities }) => {
     return (
         <DragDropContext onDragEnd={onDragEnd} getContainerForClone={() => document.body}>
             <div className="row">
@@ -24,6 +24,7 @@ const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onA
                             onForceRender={onForceRender}
                             onFillColorChange={onFillColorChange}
                             onBorderColorChange={onBorderColorChange}
+                            onMarkerIconChange={onMarkerIconChange}
                             onFileImport={onFileImport}
                             onUpdateEntityName={onUpdateEntityName}
                             onRenameLayer={onRenameLayer}

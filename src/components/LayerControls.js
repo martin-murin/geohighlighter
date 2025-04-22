@@ -3,8 +3,9 @@ import { Droppable, Draggable } from 'react-beautiful-dnd';
 import './LayerControls.css';
 import { Dropdown } from 'react-bootstrap';
 import ColorPicker from './ColorPicker';
+import IconPicker from './IconPicker';
 
-const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer, dragHandleProps, onSortEntities }) => {
+const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onMarkerIconChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer, dragHandleProps, onSortEntities }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -104,6 +105,13 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
                         <Dropdown.Item onClick={() => onToggleMarkerVisibility(layer.id)}>
                             {layer.markersVisible ? <><i className="bi bi-geo-alt-fill me-2" /> Hide Markers</> : <><i className="bi bi-geo-alt me-2" /> Show Markers</>}
                         </Dropdown.Item>
+                        <Dropdown.Divider />
+                        <Dropdown.Header>Marker Icon</Dropdown.Header>
+                        <Dropdown.ItemText>
+                            <div className="px-2">
+                                <IconPicker currentIcon={layer.markerIcon} onSelect={icon => onMarkerIconChange(layer.id, icon)} />
+                            </div>
+                        </Dropdown.ItemText>
                         <Dropdown.Divider />
                         <Dropdown.Header>Colors</Dropdown.Header>
                         <Dropdown.ItemText>

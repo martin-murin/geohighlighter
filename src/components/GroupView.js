@@ -18,6 +18,7 @@ const GroupView = ({
   onForceRender,
   onFillColorChange,
   onBorderColorChange,
+  onMarkerIconChange,
   onFileImport,
   onUpdateEntityName,
   onRenameLayer,
@@ -76,6 +77,7 @@ const GroupView = ({
               onForceRender={onForceRender}
               onFillColorChange={onFillColorChange}
               onBorderColorChange={onBorderColorChange}
+              onMarkerIconChange={onMarkerIconChange}
               onFileImport={onFileImport}
               onUpdateEntityName={onUpdateEntityName}
               onRenameLayer={onRenameLayer}
@@ -106,6 +108,7 @@ const GroupView = ({
                           onForceRender={onForceRender}
                           onFillColorChange={onFillColorChange}
                           onBorderColorChange={onBorderColorChange}
+                          onMarkerIconChange={onMarkerIconChange}
                           onFileImport={onFileImport}
                           onUpdateEntityName={onUpdateEntityName}
                           onRenameLayer={onRenameLayer}

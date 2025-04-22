@@ -36,7 +36,7 @@ const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName, handl
                     return (
                         <>
                         <GeoJSON
-                            key={`${layer.id}-${(layer.featureCollection?.features || []).length}-${layer.markersVisible}-${layer.polygonsVisible}`}
+                            key={`${layer.id}-${layer.markerIcon}-${(layer.featureCollection?.features || []).length}-${layer.markersVisible}-${layer.polygonsVisible}`}
                             data={{
                                 type: 'FeatureCollection',
                                 features: layer.featureCollection.features.filter(
@@ -65,7 +65,7 @@ const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName, handl
                                     return L.marker(latlng, {
                                         icon: L.divIcon({
                                             className: 'custom-icon',
-                                            html: `<i class=\"bi bi-geo-alt-fill\" style=\"color: ${iconColor};\"></i>`,
+                                            html: `<i class=\"${layer.markerIcon}\" style=\"color: ${iconColor};\"></i>`,
                                             iconAnchor: [12, 24],
                                         }),
                                     });
@@ -83,11 +83,11 @@ const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName, handl
                                 : L.geoJSON(f).getBounds().getCenter();
                             return (
                                 <Marker
-                                    key={`marker-${layer.id}-${f.id}`}
+                                    key={`marker-${layer.id}-${f.id}-${layer.markerIcon}`}
                                     position={position}
                                     icon={L.divIcon({
                                         className: 'custom-icon',
-                                        html: `<i class=\"bi bi-geo-alt-fill\" style=\"color: ${layer.id === hoveredLayerId ? lightenColor(layer.borderColor.hex, 0.3) : layer.borderColor.hex};\"></i>`,
+                                        html: `<i class=\"${layer.markerIcon}\" style=\"color: ${layer.id === hoveredLayerId ? lightenColor(layer.borderColor.hex, 0.3) : layer.borderColor.hex};\"></i>`,
                                         iconAnchor: [12, 24],
                                     })}
                                 >
