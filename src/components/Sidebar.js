@@ -2,7 +2,7 @@ import React from 'react';
 import { DragDropContext } from 'react-beautiful-dnd';
 import GroupView from './GroupView';
 
-const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onAddLayer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer, onDragEnd }) => {
+const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onAddLayer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer, onDragEnd, onEntityReorder, onSortEntities }) => {
     return (
         <DragDropContext onDragEnd={onDragEnd} getContainerForClone={() => document.body}>
             <div className="row">
@@ -29,6 +29,8 @@ const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onA
                             onRenameLayer={onRenameLayer}
                             hoveredLayerId={hoveredLayerId}
                             onHoverLayer={onHoverLayer}
+                            onEntityReorder={onEntityReorder}
+                            onSortEntities={onSortEntities}
                         />
                     ))}
                 </div>

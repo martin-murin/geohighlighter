@@ -482,8 +482,36 @@ function App() {
     const handleRenameLayer = (layerId, newName) => setLayers(prev => prev.map(l => l.id === layerId ? { ...l, name: newName } : l));
 
     const handleDragEnd = (result) => {
-        const { source, destination, draggableId } = result;
+        const { source, destination, draggableId, type } = result;
         if (!destination) return;
+        // entity drag: allow same-layer reorder or cross-layer move
+        if (type === 'ENTITY') {
+            const srcStr = source.droppableId.replace('entities-', '');
+            const dstStr = destination.droppableId.replace('entities-', '');
+            const srcId = !isNaN(Number(srcStr)) ? Number(srcStr) : srcStr;
+            const dstId = !isNaN(Number(dstStr)) ? Number(dstStr) : dstStr;
+            if (srcId === dstId) {
+                handleEntityReorder(srcId, result);
+            } else {
+                setLayers(prev => {
+                    let moved;
+                    const removed = prev.map(layer => {
+                        if (layer.id !== srcId) return layer;
+                        const arr = Array.from(layer.featureCollection.features);
+                        [moved] = arr.splice(source.index, 1);
+                        return { ...layer, featureCollection: { ...layer.featureCollection, features: arr } };
+                    });
+                    return removed.map(layer => {
+                        if (layer.id !== dstId) return layer;
+                        const arr = Array.from(layer.featureCollection.features);
+                        arr.splice(destination.index, 0, moved);
+                        return { ...layer, featureCollection: { ...layer.featureCollection, features: arr } };
+                    });
+                });
+            }
+            return;
+        }
+
         if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
         // update state via functional update; persistence in useEffect
@@ -502,6 +530,31 @@ function App() {
             newLayers.splice(insertAt, 0, moved);
             return newLayers;
         });
+    };
+
+    // Reorder entities within a layer
+    const handleEntityReorder = (layerId, result) => {
+        const { source, destination } = result;
+        if (!destination || source.index === destination.index) return;
+        setLayers(prev => prev.map(layer => {
+            if (layer.id !== layerId) return layer;
+            const features = Array.from(layer.featureCollection.features);
+            const [moved] = features.splice(source.index, 1);
+            features.splice(destination.index, 0, moved);
+            return { ...layer, featureCollection: { ...layer.featureCollection, features } };
+        }));
+    };
+
+    // Sort entities alphabetically
+    const handleSortEntities = (layerId, order) => {
+        setLayers(prev => prev.map(layer => {
+            if (layer.id !== layerId) return layer;
+            const features = [...layer.featureCollection.features].sort((a, b) =>
+                a.properties.name.localeCompare(b.properties.name)
+            );
+            if (order === 'desc') features.reverse();
+            return { ...layer, featureCollection: { ...layer.featureCollection, features } };
+        }));
     };
 
     return (
@@ -548,6 +601,8 @@ function App() {
                                 onRenameLayer={handleRenameLayer}
                                 hoveredLayerId={hoveredLayerId}
                                 onHoverLayer={handleHoverLayer}
+                                onEntityReorder={handleEntityReorder}
+                                onSortEntities={handleSortEntities}
                                 onDragEnd={handleDragEnd}
                             />
                         </div>

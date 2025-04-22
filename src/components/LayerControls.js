@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import ColorPicker from './ColorPicker';
-import './LayerControls.css'
+import React, { useState, useEffect, useReducer } from 'react';
+import { Droppable, Draggable } from 'react-beautiful-dnd';
+import './LayerControls.css';
 import { Dropdown } from 'react-bootstrap';
 
-const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer }) => {
+const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer, dragHandleProps, onSortEntities }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -84,7 +84,7 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
     return (
         <div className={`layer-controls ${hoveredLayerId === layer.id ? 'layer-hovered' : ''}`} onMouseEnter={() => onHoverLayer(layer.id)} onMouseLeave={() => onHoverLayer(null)}>
             <div className="d-flex justify-content-between align-items-center px-2 py-1">
-                <h5 className="mb-0">{layer.name}</h5>
+                <h5 className="mb-0" {...dragHandleProps} style={{ cursor: 'grab' }}>{layer.name}</h5>
                 <Dropdown align="end">
                     <Dropdown.Toggle variant="light" size="sm">
                         <i className="bi bi-list"></i>
@@ -102,6 +102,14 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
                         </Dropdown.Item>
                         <Dropdown.Item onClick={() => onToggleMarkerVisibility(layer.id)}>
                             {layer.markersVisible ? <><i className="bi bi-geo-alt-fill me-2" /> Hide Markers</> : <><i className="bi bi-geo-alt me-2" /> Show Markers</>}
+                        </Dropdown.Item>
+                        <Dropdown.Divider />
+                        <Dropdown.Header>Sort Entities</Dropdown.Header>
+                        <Dropdown.Item onClick={() => onSortEntities(layer.id, 'asc')}>
+                          <i className="bi bi-sort-alpha-down me-2" />Sort A→Z
+                        </Dropdown.Item>
+                        <Dropdown.Item onClick={() => onSortEntities(layer.id, 'desc')}>
+                          <i className="bi bi-sort-alpha-down-alt me-2" />Sort Z→A
                         </Dropdown.Item>
                         <Dropdown.Divider />
                         <Dropdown.Item onClick={() => onRemoveLayer(layer.id)} className="text-danger">
@@ -151,50 +159,64 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
                 </div>
             </div>
 
-            <ul className="list-group">
-              {featuresList.map((feature, index) => (
-                <li key={index} className="list-group-item d-flex align-items-center">
-                  {editingEntityId === feature.id ? (
-                    <div className="flex-grow-1 d-flex align-items-center">
-                      <input
-                        className="form-control form-control-sm"
-                        type="text"
-                        value={editedName}
-                        onChange={e => setEditedName(e.target.value)}
-                      />
-                      <button
-                        className="btn btn-success btn-sm ms-2"
-                        onClick={() => { onUpdateEntityName(layer.id, feature.id, editedName); setEditingEntityId(null); }}
-                      >
-                        <i className="bi bi-check"></i>
-                      </button>
-                      <button
-                        className="btn btn-secondary btn-sm ms-1"
-                        onClick={() => setEditingEntityId(null)}
-                      >
-                        <i className="bi bi-x"></i>
-                      </button>
-                    </div>
-                  ) : (
-                    <span className="flex-grow-1">{feature.properties.name || "Loading..."}</span>
-                  )}
-                  {editingEntityId !== feature.id && (
-                    <button
-                      className="btn btn-outline-secondary btn-sm ms-2"
-                      onClick={() => { setEditingEntityId(feature.id); setEditedName(feature.properties.name); }}
-                    >
-                      <i className="bi bi-pencil"></i>
-                    </button>
-                  )}
-                  <button
-                    className="btn btn-outline-secondary btn-sm ms-2"
-                    onClick={() => onRemoveEntity(layer.id, feature.id)}
-                  >
-                    &times;
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <Droppable droppableId={`entities-${layer.id}`} type="ENTITY">
+                {(provided) => (
+                  <ul className="list-group" ref={provided.innerRef} {...provided.droppableProps}>
+                    {featuresList.map((feature, index) => (
+                      <Draggable key={feature.id} draggableId={String(feature.id)} index={index}>
+                        {(provided2) => (
+                          <li
+                            ref={provided2.innerRef}
+                            {...provided2.draggableProps}
+                            {...provided2.dragHandleProps}
+                            className="list-group-item d-flex align-items-center"
+                          >
+                            {editingEntityId === feature.id ? (
+                              <div className="flex-grow-1 d-flex align-items-center">
+                                <input
+                                  className="form-control form-control-sm"
+                                  type="text"
+                                  value={editedName}
+                                  onChange={e => setEditedName(e.target.value)}
+                                />
+                                <button
+                                  className="btn btn-success btn-sm ms-2"
+                                  onClick={() => { onUpdateEntityName(layer.id, feature.id, editedName); setEditingEntityId(null); }}
+                                >
+                                  <i className="bi bi-check"></i>
+                                </button>
+                                <button
+                                  className="btn btn-secondary btn-sm ms-1"
+                                  onClick={() => setEditingEntityId(null)}
+                                >
+                                  <i className="bi bi-x"></i>
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="flex-grow-1">{feature.properties.name || "Loading..."}</span>
+                            )}
+                            {editingEntityId !== feature.id && (
+                              <button
+                                className="btn btn-outline-secondary btn-sm ms-2"
+                                onClick={() => { setEditingEntityId(feature.id); setEditedName(feature.properties.name); }}
+                              >
+                                <i className="bi bi-pencil"></i>
+                              </button>
+                            )}
+                            <button
+                              className="btn btn-outline-secondary btn-sm ms-2"
+                              onClick={() => onRemoveEntity(layer.id, feature.id)}
+                            >
+                              &times;
+                            </button>
+                          </li>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </ul>
+                )}
+              </Droppable>
         </div>
     );
 };
