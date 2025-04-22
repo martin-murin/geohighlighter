@@ -2,6 +2,7 @@ import React, { useState, useEffect, useReducer } from 'react';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import './LayerControls.css';
 import { Dropdown } from 'react-bootstrap';
+import ColorPicker from './ColorPicker';
 
 const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer, dragHandleProps, onSortEntities }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -103,6 +104,20 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
                         <Dropdown.Item onClick={() => onToggleMarkerVisibility(layer.id)}>
                             {layer.markersVisible ? <><i className="bi bi-geo-alt-fill me-2" /> Hide Markers</> : <><i className="bi bi-geo-alt me-2" /> Show Markers</>}
                         </Dropdown.Item>
+                        <Dropdown.Divider />
+                        <Dropdown.Header>Colors</Dropdown.Header>
+                        <Dropdown.ItemText>
+                            <div className="d-flex align-items-center px-2">
+                                <ColorPicker pickerType="fill" color={currentFillColor} onChange={handleFillColorChange} />
+                                <span className="ms-2">Fill</span>
+                            </div>
+                        </Dropdown.ItemText>
+                        <Dropdown.ItemText>
+                            <div className="d-flex align-items-center px-2">
+                                <ColorPicker pickerType="border" color={currentBorderColor} onChange={handleBorderColorChange} />
+                                <span className="ms-2">Border</span>
+                            </div>
+                        </Dropdown.ItemText>
                         <Dropdown.Divider />
                         <Dropdown.Header>Sort Entities</Dropdown.Header>
                         <Dropdown.Item onClick={() => onSortEntities(layer.id, 'asc')}>

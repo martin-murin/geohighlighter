@@ -1,13 +1,16 @@
 import React from 'react';
 import reactCSS from 'reactcss';
+import ReactDOM from 'react-dom';
 import { SketchPicker } from 'react-color';
 
 class ColorPicker extends React.Component {
   constructor(props) {
     super(props);
+    this.swatchRef = React.createRef();
     this.state = {
       displayColorPicker: false,
-      color: props.color ? props.color.rgb : { r: 0, g: 0, b: 0, a: 0.2 }, // Initialize with props.color
+      popoverPosition: { top: 0, left: 0 },
+      color: props.color ? props.color.rgb : { r: 0, g: 0, b: 0, a: 0.2 },
     };
   }
 
@@ -19,7 +22,15 @@ class ColorPicker extends React.Component {
   }
 
   handleClick = () => {
-    this.setState({ displayColorPicker: !this.state.displayColorPicker });
+    if (!this.state.displayColorPicker && this.swatchRef.current) {
+      const rect = this.swatchRef.current.getBoundingClientRect();
+      this.setState({
+        displayColorPicker: true,
+        popoverPosition: { top: rect.bottom, left: rect.left },
+      });
+    } else {
+      this.setState({ displayColorPicker: false });
+    }
   };
 
   handleClose = () => {
@@ -39,15 +50,14 @@ class ColorPicker extends React.Component {
     // Swatch styles for fill and border pickers
     const fillSwatchStyles = {
       swatch: {
-        padding: '5px',
         background: '#fff',
-        borderRadius: '1px',
+        borderRadius: '2px',
         boxShadow: '0 0 0 1px rgba(0,0,0,.1)',
         display: 'inline-block',
         cursor: 'pointer',
-        border: '2px solid #000', // Solid border for fill
-        width: '40px', // Larger size for fill
-        height: '20px',
+        border: '1px solid #000', // Solid border for fill
+        width: '16px', // compact square
+        height: '16px',
       },
       color: {
         background: `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`,
@@ -55,8 +65,8 @@ class ColorPicker extends React.Component {
         height: '100%',
       },
       popover: {
-        position: 'absolute',
-        zIndex: '2',
+        position: 'absolute', // use fixed to avoid overflow clipping
+        zIndex: 2,
       },
       cover: {
         position: 'fixed',
@@ -69,14 +79,13 @@ class ColorPicker extends React.Component {
 
     const borderSwatchStyles = {
       swatch: {
-        padding: '5px',
         background: '#fff',
-        borderRadius: '1px',
+        borderRadius: '2px',
         boxShadow: '0 0 0 1px rgba(0,0,0,.1)',
         display: 'inline-block',
         cursor: 'pointer',
-        border: '2px dashed #333', // Dashed border for the border picker
-        width: '40px', // Smaller size for border
+        border: '1px dashed #333', // Dashed border for the border picker
+        width: '16px', // compact square
         height: '16px',
       },
       color: {
@@ -85,8 +94,8 @@ class ColorPicker extends React.Component {
         height: '100%',
       },
       popover: {
-        position: 'absolute',
-        zIndex: '2',
+        position: 'fixed',
+        zIndex: 2000,
       },
       cover: {
         position: 'fixed',
@@ -103,19 +112,19 @@ class ColorPicker extends React.Component {
 
     return (
       <div>
-        <div style={styles.swatch} onClick={this.handleClick}>
+        <div ref={this.swatchRef} style={styles.swatch} onClick={this.handleClick}>
           <div style={styles.color} />
         </div>
-        {this.state.displayColorPicker ? (
-          <div style={styles.popover}>
+        {this.state.displayColorPicker && ReactDOM.createPortal(
+          <div style={{ position: 'fixed', top: this.state.popoverPosition.top + 'px', left: this.state.popoverPosition.left + 'px', zIndex: 9999 }}>
             <div style={styles.cover} onClick={this.handleClose} />
             <SketchPicker color={this.state.color} onChange={this.handleChange} />
-          </div>
-        ) : null}
+          </div>,
+          document.body
+        )}
       </div>
     );
   }
 }
 
 export default ColorPicker;
-
