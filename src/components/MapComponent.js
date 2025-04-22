@@ -4,7 +4,19 @@ import L from 'leaflet';
 import MapLayer from './MapLayer';
 import 'leaflet/dist/leaflet.css';
 
-const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName, handleGeometryUpdate }) => {
+// Helper to lighten hex colors by percent
+function lightenColor(hex, percent) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    let r = (num >> 16) & 255;
+    let g = (num >> 8) & 255;
+    let b = num & 255;
+    r = Math.min(255, r + Math.floor((255 - r) * percent));
+    g = Math.min(255, g + Math.floor((255 - g) * percent));
+    b = Math.min(255, b + Math.floor((255 - b) * percent));
+    return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
+
+const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName, handleGeometryUpdate, hoveredLayerId, onHoverLayer }) => {
     return (
         <MapContainer
             center={[48, 17]}
@@ -31,29 +43,35 @@ const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName, handl
                                     f => f.geometry && f.geometry.type && f.geometry.coordinates
                                 )
                             }}
-                            style={() => ({
-                                fillColor: layer.fillColor.hex,
-                                fillOpacity: layer.fillColor.rgb.a,
-                                color: layer.borderColor.hex,
-                                opacity: layer.borderColor.rgb.a,
-                                weight: 2,
-                            })}
+                            style={() => {
+                                const isHovered = layer.id === hoveredLayerId;
+                                return {
+                                    fillColor: isHovered ? lightenColor(layer.fillColor.hex, 0.3) : layer.fillColor.hex,
+                                    fillOpacity: Math.min(1, layer.fillColor.rgb.a + (isHovered ? 0.3 : 0)),
+                                    color: isHovered ? lightenColor(layer.borderColor.hex, 0.3) : layer.borderColor.hex,
+                                    opacity: Math.min(1, layer.borderColor.rgb.a + (isHovered ? 0.3 : 0)),
+                                    weight: isHovered ? 3 : 2,
+                                };
+                            }}
                             filter={feature =>
                                 feature.geometry.type === 'Point'
                                     ? layer.markersVisible
                                     : layer.polygonsVisible
                             }
-                            pointToLayer={(feature, latlng) =>
-                                feature.geometry.type === 'Point' && layer.markersVisible
-                                    ? L.marker(latlng, {
-                                          icon: L.divIcon({
-                                              className: 'custom-icon',
-                                              html: `<i class="bi bi-geo-alt-fill" style="color: ${layer.borderColor.hex};"></i>`,
-                                              iconAnchor: [12, 24],
-                                          }),
-                                      })
-                                    : null
-                            }
+                            pointToLayer={(feature, latlng) => {
+                                const isHovered = layer.id === hoveredLayerId;
+                                const iconColor = isHovered ? lightenColor(layer.borderColor.hex, 0.3) : layer.borderColor.hex;
+                                if (feature.geometry.type === 'Point' && layer.markersVisible) {
+                                    return L.marker(latlng, {
+                                        icon: L.divIcon({
+                                            className: 'custom-icon',
+                                            html: `<i class=\"bi bi-geo-alt-fill\" style=\"color: ${iconColor};\"></i>`,
+                                            iconAnchor: [12, 24],
+                                        }),
+                                    });
+                                }
+                                return null;
+                            }}
                             onEachFeature={(feature, layerFG) => layerFG.bindPopup(feature.properties.name)}
                         />
                         {/* markers for polygons as centroids */}
@@ -69,7 +87,7 @@ const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName, handl
                                     position={position}
                                     icon={L.divIcon({
                                         className: 'custom-icon',
-                                        html: `<i class="bi bi-geo-alt-fill" style="color: ${layer.borderColor.hex};"></i>`,
+                                        html: `<i class=\"bi bi-geo-alt-fill\" style=\"color: ${layer.id === hoveredLayerId ? lightenColor(layer.borderColor.hex, 0.3) : layer.borderColor.hex};\"></i>`,
                                         iconAnchor: [12, 24],
                                     })}
                                 >
@@ -92,6 +110,8 @@ const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName, handl
                         borderColor={layer.borderColor}
                         onUpdateEntityName={handleUpdateEntityName}
                         onUpdateGeometry={handleGeometryUpdate}
+                        hoveredLayerId={hoveredLayerId}
+                        onHoverLayer={onHoverLayer}
                     />
                 );
             })}

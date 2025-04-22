@@ -3,6 +3,10 @@
   background-color: rgba(13, 110, 253, 0.1);
 }
 
+.group-header.group-hovered {
+  background-color: rgba(13, 110, 253, 0.2);
+}
+
 .group-children {
   margin-left: 1rem;
   padding-left: 0.5rem;

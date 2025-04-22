@@ -36,6 +36,9 @@ function App() {
     const hasSyncedGroupsRef = useRef(false);
     // skip saving groups on initial mount to avoid clearing DB
     const isGroupsInitialMount = useRef(true);
+    // hover state for layer highlighting
+    const [hoveredLayerId, setHoveredLayerId] = useState(null);
+    const handleHoverLayer = (id) => setHoveredLayerId(id);
 
     useEffect(() => {
         const loadData = async () => {
@@ -520,6 +523,8 @@ function App() {
                                 onFileImport={handleFileImport}
                                 onUpdateEntityName={handleUpdateEntityName}
                                 onRenameLayer={handleRenameLayer}
+                                hoveredLayerId={hoveredLayerId}
+                                onHoverLayer={handleHoverLayer}
                             />
                         </div>
                     </div>
@@ -534,6 +539,7 @@ function App() {
                         handleEntityError={handleEntityError}
                         handleUpdateEntityName={handleUpdateEntityName}
                         handleGeometryUpdate={handleUpdateFeatureGeometry}
+                        hoveredLayerId={hoveredLayerId}
                     />
                 </div>
             </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import GroupView from './GroupView';
 
-const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onAddLayer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport, onUpdateEntityName }) => {
+const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onAddLayer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer }) => {
     return (
         <div className="row">
             <div className="sidebar col-12 text-start">
@@ -24,6 +24,9 @@ const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onA
                         onBorderColorChange={onBorderColorChange}
                         onFileImport={onFileImport}
                         onUpdateEntityName={onUpdateEntityName}
+                        onRenameLayer={onRenameLayer}
+                        hoveredLayerId={hoveredLayerId}
+                        onHoverLayer={onHoverLayer}
                     />
                 ))}
             </div>

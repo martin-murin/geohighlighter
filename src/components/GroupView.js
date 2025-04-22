@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import LayerControls from './LayerControls';
 import './GroupView.css';
 
@@ -18,11 +18,23 @@ const GroupView = ({
   onFillColorChange,
   onBorderColorChange,
   onFileImport,
-  onUpdateEntityName
+  onUpdateEntityName,
+  onRenameLayer,
+  hoveredLayerId,
+  onHoverLayer
 }) => {
   // filter layers belonging to this group
   const groupLayers = layers.filter(l => l.path === group.path);
   const [expanded, setExpanded] = useState(true);
+
+  // Highlight this group header when any descendant layer is hovered
+  const isGroupHovered = useMemo(() => {
+    if (!hoveredLayerId) return false;
+    const hovered = layers.find(l => l.id === hoveredLayerId);
+    if (!hovered) return false;
+    if (hovered.path === group.path) return true;
+    return group.path && hovered.path.startsWith(group.path + '/');
+  }, [hoveredLayerId, layers, group.path]);
 
   const handleAddLayer = (e) => {
     if (e.key === 'Enter' && e.target.value.trim()) {
@@ -33,7 +45,7 @@ const GroupView = ({
 
   return (
     <div className="group-view mb-3">
-      <div className="d-flex justify-content-between align-items-center p-2 bg-light rounded group-header" onClick={() => setExpanded(prev => !prev)}>
+      <div className={`d-flex justify-content-between align-items-center p-2 bg-light rounded group-header ${isGroupHovered ? 'group-hovered' : ''}`} onClick={() => setExpanded(prev => !prev)}>
         <div className="d-flex align-items-center">
           <span className="me-2">{group.name}</span>
           <i className="bi bi-plus-circle me-2" onClick={e => { e.stopPropagation(); const name = prompt('New subgroup name'); if (name) onAddGroup(group.path, name); }} style={{ cursor: 'pointer' }} />
@@ -63,6 +75,9 @@ const GroupView = ({
               onBorderColorChange={onBorderColorChange}
               onFileImport={onFileImport}
               onUpdateEntityName={onUpdateEntityName}
+              onRenameLayer={onRenameLayer}
+              hoveredLayerId={hoveredLayerId}
+              onHoverLayer={onHoverLayer}
             />
           ))}
           {groupLayers.map(layer => (
@@ -79,6 +94,9 @@ const GroupView = ({
               onBorderColorChange={onBorderColorChange}
               onFileImport={onFileImport}
               onUpdateEntityName={onUpdateEntityName}
+              onRenameLayer={onRenameLayer}
+              hoveredLayerId={hoveredLayerId}
+              onHoverLayer={onHoverLayer}
             />
           ))}
           <div className="new-layer mt-3">
