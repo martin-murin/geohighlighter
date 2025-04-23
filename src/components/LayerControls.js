@@ -196,7 +196,7 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
 
             <Droppable droppableId={`entities-${layer.id}`} type="ENTITY" isDropDisabled={false}>
                 {(provided) => (
-                  <ul className="list-group" ref={provided.innerRef} {...provided.droppableProps}>
+                  <ul className="list-group" ref={provided.innerRef} {...provided.droppableProps} style={{ minHeight: featuresList.length ? 'auto' : '50px' }}>
                     {featuresList.map((feature, index) => (
                       <Draggable key={feature.id} draggableId={String(feature.id)} index={index}>
                         {(provided2) => (
@@ -249,6 +249,7 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
                       </Draggable>
                     ))}
                     {provided.placeholder}
+                    {featuresList.length === 0 && <li className="list-group-item text-center text-muted">Drop items here</li>}
                   </ul>
                 )}
               </Droppable>

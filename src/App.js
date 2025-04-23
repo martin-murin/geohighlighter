@@ -474,6 +474,7 @@ function App() {
     };
 
     const handleRenameGroup = (path, newName) => {
+        // Update groups first
         setGroups(prev => {
             const tree = JSON.parse(JSON.stringify(prev));
             const update = (nodes) => nodes.forEach(g => {
@@ -489,6 +490,27 @@ function App() {
             });
             update(tree);
             return tree;
+        });
+
+        // Update layers paths to match the renamed group
+        setLayers(prevLayers => {
+            return prevLayers.map(layer => {
+                // Exact match: layer directly in the renamed group
+                if (layer.path === path) {
+                    const parts = path.split('/');
+                    parts[parts.length-1] = newName;
+                    const newPath = parts.join('/');
+                    return {...layer, path: newPath};
+                }
+                // Child match: layer is in a subgroup of the renamed group
+                else if (layer.path.startsWith(`${path}/`)) {
+                    const parts = path.split('/');
+                    parts[parts.length-1] = newName;
+                    const newPath = parts.join('/');
+                    return {...layer, path: layer.path.replace(`${path}/`, `${newPath}/`)};
+                }
+                return layer;
+            });
         });
     };
 
