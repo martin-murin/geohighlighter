@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import LayerControls from './LayerControls';
 import './GroupView.css';
-import { Droppable, Draggable } from 'react-beautiful-dnd';
+import { Droppable, Draggable } from '@hello-pangea/dnd';
 
 const GroupView = ({
   group,

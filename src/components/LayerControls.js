@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useReducer } from 'react';
-import { Droppable, Draggable } from 'react-beautiful-dnd';
+import { Droppable, Draggable } from '@hello-pangea/dnd';
 import './LayerControls.css';
 import { Dropdown, Form } from 'react-bootstrap';
 import ColorPicker from './ColorPicker';
@@ -84,7 +84,11 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
     };
 
     return (
-        <div className={`layer-controls ${hoveredLayerId === layer.id ? 'layer-hovered' : ''}`} onMouseEnter={() => onHoverLayer(layer.id)} onMouseLeave={() => onHoverLayer(null)}>
+        <div
+            className={`layer-controls ${hoveredLayerId === layer.id ? 'layer-hovered' : ''}`}
+            onMouseEnter={e => { if (e.buttons === 0) onHoverLayer(layer.id); }}
+            onMouseLeave={e => { if (e.buttons === 0) onHoverLayer(null); }}
+        >
             <div className="d-flex justify-content-between align-items-center px-2 py-1">
                 <h5 className="mb-0" {...dragHandleProps} style={{ cursor: 'grab' }}>{layer.name}</h5>
                 <Dropdown align="end">
@@ -190,7 +194,7 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
                 </div>
             </div>
 
-            <Droppable droppableId={`entities-${layer.id}`} type="ENTITY">
+            <Droppable droppableId={`entities-${layer.id}`} type="ENTITY" isDropDisabled={false}>
                 {(provided) => (
                   <ul className="list-group" ref={provided.innerRef} {...provided.droppableProps}>
                     {featuresList.map((feature, index) => (
