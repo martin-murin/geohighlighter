@@ -5,10 +5,12 @@ import { Droppable, Draggable } from '@hello-pangea/dnd';
 
 const GroupView = ({
   group,
+  groups,
   layers,
   onAddGroup,
   onRenameGroup,
   onRemoveGroup,
+  onMoveGroup,
   onAddLayer,
   onAddEntity,
   onRemoveEntity,
@@ -51,11 +53,15 @@ const GroupView = ({
 
   return (
     <div className="group-view mb-3">
-      <div className={`d-flex justify-content-between align-items-center p-2 bg-light rounded group-header ${isGroupHovered ? 'group-hovered' : ''}`} onClick={() => setExpanded(prev => !prev)}>
+      <div 
+        className={`d-flex justify-content-between align-items-center p-2 bg-light rounded group-header ${isGroupHovered ? 'group-hovered' : ''}`} 
+        onClick={() => setExpanded(prev => !prev)}
+      >
         <div className="d-flex align-items-center">
           <span className="me-2">{group.name}</span>
           <i className="bi bi-plus-circle me-2" onClick={e => { e.stopPropagation(); const name = prompt('New subgroup name'); if (name) onAddGroup(group.path, name); }} style={{ cursor: 'pointer' }} />
           <i className="bi bi-pencil me-2" onClick={e => { e.stopPropagation(); const newName = prompt('Rename group', group.name); if (newName) onRenameGroup(group.path, newName); }} style={{ cursor: 'pointer' }} />
+          <i className="bi bi-arrow-repeat me-2" onClick={e => { e.stopPropagation(); onMoveGroup(group); }} style={{ cursor: 'pointer' }} title="Move group" />
           <i className="bi bi-trash me-2" onClick={e => { e.stopPropagation(); if (window.confirm(`Delete group '${group.name}'?`)) onRemoveGroup(group.path); }} style={{ cursor: 'pointer' }} />
         </div>
         <i className={`bi bi-chevron-${expanded ? 'down' : 'right'}`} style={{ cursor: 'pointer' }} />
@@ -66,10 +72,12 @@ const GroupView = ({
             <GroupView
               key={sub.id}
               group={sub}
+              groups={groups}
               layers={layers}
               onAddGroup={onAddGroup}
               onRenameGroup={onRenameGroup}
               onRemoveGroup={onRemoveGroup}
+              onMoveGroup={onMoveGroup}
               onAddLayer={onAddLayer}
               onAddEntity={onAddEntity}
               onRemoveEntity={onRemoveEntity}

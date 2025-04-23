@@ -42,6 +42,10 @@ function App() {
     // hover state for layer highlighting
     const [hoveredLayerId, setHoveredLayerId] = useState(null);
     const handleHoverLayer = (id) => setHoveredLayerId(id);
+    // state for group move dialog
+    const [moveGroupDialogOpen, setMoveGroupDialogOpen] = useState(false);
+    const [groupToMove, setGroupToMove] = useState(null);
+    const [selectedDestination, setSelectedDestination] = useState('');
 
     useEffect(() => {
         const loadData = async () => {
@@ -524,12 +528,327 @@ function App() {
     };
 
     const handleRenameLayer = (layerId, newName) => setLayers(prev => prev.map(l => l.id === layerId ? { ...l, name: newName } : l));
+    
+    // Handle moving a group to a new parent
+    const handleMoveGroup = (group) => {
+        setGroupToMove(group);
+        setSelectedDestination('');
+        setMoveGroupDialogOpen(true);
+    };
+    
+    // Execute the group move after destination is selected
+    const executeGroupMove = () => {
+        if (!groupToMove || selectedDestination === null) return;
+        
+        // Prevent moving to own path or subpath
+        if (selectedDestination === groupToMove.path ||
+            selectedDestination.startsWith(`${groupToMove.path}/`)) {
+            alert('Cannot move a group into itself or its subgroups');
+            return;
+        }
+
+        const oldPath = groupToMove.path;
+        
+        // Check for naming conflicts
+        const findGroupsByPath = (groups, path) => {
+            if (path === '') return groups; // Root level
+            
+            for (const g of groups) {
+                if (g.path === path) {
+                    return g.subgroups || [];
+                }
+                if (g.subgroups?.length > 0) {
+                    const found = findGroupsByPath(g.subgroups, path);
+                    if (found !== null) return found;
+                }
+            }
+            return null;
+        };
+        
+        const destinationGroups = findGroupsByPath(groups, selectedDestination);
+        if (destinationGroups !== null) {
+            const nameConflict = destinationGroups.some(g => g.name === groupToMove.name && g.id !== groupToMove.id);
+            if (nameConflict) {
+                alert(`Cannot move group: A group named '${groupToMove.name}' already exists at the destination.`);
+                return;
+            }
+        }
+
+        // Compute the new path
+        const newPath = selectedDestination === '' ? 
+            groupToMove.name : 
+            `${selectedDestination}/${groupToMove.name}`;
+        
+        // Update group paths
+        setGroups(prevGroups => {
+            const updatedGroups = JSON.parse(JSON.stringify(prevGroups));
+            
+            // Find and remove the group from its current location
+            const removeGroup = (groups, pathToRemove) => {
+                for (let i = 0; i < groups.length; i++) {
+                    if (groups[i].path === pathToRemove) {
+                        return groups.splice(i, 1)[0];
+                    }
+                    if (groups[i].subgroups?.length > 0) {
+                        const removed = removeGroup(groups[i].subgroups, pathToRemove);
+                        if (removed) return removed;
+                    }
+                }
+                return null;
+            };
+            
+            // Move the group to the new location
+            const movedGroup = removeGroup(updatedGroups, oldPath);
+            if (!movedGroup) return prevGroups; // Group not found
+            
+            // Update the paths of the moved group and its subgroups
+            const updatePaths = (group, oldPathBase, newPathBase) => {
+                group.path = newPathBase;
+                
+                if (group.subgroups?.length > 0) {
+                    group.subgroups.forEach(subgroup => {
+                        const subOldPath = subgroup.path;
+                        const subNewPath = subOldPath.replace(oldPathBase, newPathBase);
+                        updatePaths(subgroup, subOldPath, subNewPath);
+                    });
+                }
+            };
+            
+            updatePaths(movedGroup, oldPath, newPath);
+            
+            // Add the group to its new destination
+            const addToDestination = (groups, destPath, groupToAdd) => {
+                // Root level
+                if (destPath === '') {
+                    groups.push(groupToAdd);
+                    return true;
+                }
+                
+                for (const g of groups) {
+                    if (g.path === destPath) {
+                        if (!g.subgroups) g.subgroups = [];
+                        g.subgroups.push(groupToAdd);
+                        return true;
+                    }
+                    if (g.subgroups?.length > 0) {
+                        if (addToDestination(g.subgroups, destPath, groupToAdd)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            };
+            
+            const added = addToDestination(updatedGroups, selectedDestination, movedGroup);
+            if (!added) return prevGroups; // Failed to add
+            
+            return updatedGroups;
+        });
+        
+        // Update paths of layers
+        setLayers(prevLayers => {
+            return prevLayers.map(layer => {
+                // Direct match: layer is directly in the moved group
+                if (layer.path === oldPath) {
+                    return { ...layer, path: newPath };
+                }
+                
+                // Hierarchical match: layer is in a subgroup of the moved group
+                if (layer.path.startsWith(`${oldPath}/`)) {
+                    return { ...layer, path: layer.path.replace(oldPath, newPath) };
+                }
+                
+                return layer;
+            });
+        });
+        
+        // Close the dialog
+        setMoveGroupDialogOpen(false);
+    };
 
     const handleDragEnd = (result) => {
         console.log('Drag ended:', result);
         const { source, destination, draggableId, type } = result;
         if (!destination) return;
-        // entity drag: allow same-layer reorder or cross-layer move
+
+        // Don't do anything if the item was dropped in the same place
+        if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+        // Handle GROUP drag and drop
+        if (type === 'GROUP') {
+            // Extract group ID from draggableId (e.g., "group-123" -> 123)
+            const groupId = draggableId.replace('group-', '');
+            
+            // Get source and destination parent paths
+            // Format: "subgroups-parentPath" -> "parentPath"
+            const sourceParentPath = source.droppableId.replace('subgroups-', '');
+            const destParentPath = destination.droppableId.replace('subgroups-', '');
+            
+            // Track original path for layer path updates
+            let draggedGroupOldPath = '';
+            
+            // Handle group dragging logic
+            setGroups(prevGroups => {
+                // Make a deep copy of the groups to work with
+                const newGroups = JSON.parse(JSON.stringify(prevGroups));
+                
+                // Find the dragged group and its source parent
+                let draggedGroup = null;
+                let sourceParent = null;
+                let draggedGroupIndex = -1;
+                
+                // Helper to find a group by ID
+                const findGroupById = (groups, id, parent = null, index = -1) => {
+                    for (let i = 0; i < groups.length; i++) {
+                        if (groups[i].id === id) {
+                            return { group: groups[i], parent, index: i };
+                        }
+                        if (groups[i].subgroups?.length > 0) {
+                            const result = findGroupById(groups[i].subgroups, id, groups[i], i);
+                            if (result.group) return result;
+                        }
+                    }
+                    return { group: null, parent: null, index: -1 };
+                };
+                
+                // Helper to find a group by path
+                const findGroupByPath = (groups, path) => {
+                    if (path === 'root') return { group: { subgroups: newGroups, path: '' }, isRoot: true };
+                    
+                    // Root level groups
+                    if (path === '') {
+                        return { group: { subgroups: newGroups, path: '' }, isRoot: true };
+                    }
+                    
+                    for (const group of groups) {
+                        if (group.path === path) return { group, isRoot: false };
+                        if (group.subgroups?.length > 0) {
+                            const found = findGroupByPath(group.subgroups, path);
+                            if (found.group) return found;
+                        }
+                    }
+                    return { group: null, isRoot: false };
+                };
+                
+                // Find the dragged group
+                const { group: foundGroup, parent: foundParent, index } = findGroupById(newGroups, groupId);
+                draggedGroup = foundGroup;
+                sourceParent = foundParent;
+                draggedGroupIndex = index;
+                
+                if (!draggedGroup) return prevGroups; // Group not found
+                
+                // Store original path for layer path updates
+                draggedGroupOldPath = draggedGroup.path;
+                // Add to result object so it can be accessed later for layer updates
+                result.draggedGroupOldPath = draggedGroupOldPath;
+                
+                // Find destination parent group
+                const { group: destParentGroup, isRoot: isDestRoot } = findGroupByPath(newGroups, destParentPath);
+                if (!destParentGroup) return prevGroups; // Destination not found
+                
+                // Check for naming conflicts in the destination
+                // A conflict exists if there's already a subgroup with the same name in the destination
+                const destSubgroups = isDestRoot ? newGroups : destParentGroup.subgroups || [];
+                const nameConflict = destSubgroups.some(g => g.name === draggedGroup.name && g.id !== draggedGroup.id);
+                
+                if (nameConflict) {
+                    alert(`Cannot move group: A group named '${draggedGroup.name}' already exists in the destination.`);
+                    return prevGroups;
+                }
+                
+                // Remove the group from its current location
+                if (sourceParent) {
+                    sourceParent.subgroups.splice(draggedGroupIndex, 1);
+                } else {
+                    newGroups.splice(draggedGroupIndex, 1);
+                }
+                
+                // Calculate the new path for the dragged group
+                let newPath = destParentPath === 'root' ? draggedGroup.name : `${destParentPath}/${draggedGroup.name}`;
+                
+                // Update the path of the dragged group and all its subgroups
+                const updateGroupPaths = (group, oldPath, newPathBase) => {
+                    // Keep the group's name part but update the parent path part
+                    const oldGroupPath = group.path;
+                    group.path = newPathBase;
+                    
+                    if (group.subgroups?.length > 0) {
+                        group.subgroups.forEach(subgroup => {
+                            // Replace just the part of the path that changed
+                            const newSubPath = subgroup.path.replace(oldPath, newPathBase);
+                            updateGroupPaths(subgroup, subgroup.path, newSubPath);
+                        });
+                    }
+                };
+                
+                updateGroupPaths(draggedGroup, draggedGroup.path, newPath);
+                
+                // Add the group to its new location
+                if (isDestRoot) {
+                    // Insert at the root level
+                    newGroups.splice(destination.index, 0, draggedGroup);
+                } else {
+                    // Initialize subgroups array if it doesn't exist
+                    if (!destParentGroup.subgroups) destParentGroup.subgroups = [];
+                    destParentGroup.subgroups.splice(destination.index, 0, draggedGroup);
+                }
+                
+                return newGroups;
+            });
+            
+            // Store the dragged group info for path updating
+            // groupId already defined above, so we reuse it
+            const oldPath = result.draggedGroupOldPath;
+            let newPath = '';
+            
+            // Need to update layer paths after groups are updated
+            // Here we're using a simpler approach that updates paths after the group state has been updated
+            setTimeout(() => {
+                setLayers(prevLayers => {
+                    // Helper function to find a group by ID
+                    const findGroupPath = (groups, targetId) => {
+                        for (const group of groups) {
+                            if (group.id === targetId) {
+                                return group.path;
+                            }
+                            if (group.subgroups?.length > 0) {
+                                const path = findGroupPath(group.subgroups, targetId);
+                                if (path) return path;
+                            }
+                        }
+                        return null;
+                    };
+                    
+                    // Find the new path of the dragged group
+                    newPath = findGroupPath(groups, groupId);
+                    if (!newPath || !oldPath) return prevLayers; // Can't update paths without old and new paths
+                    
+                    console.log(`Updating layers: group ${groupId} moved from ${oldPath} to ${newPath}`);
+                    
+                    // Update all layer paths that belong to the dragged group or its subgroups
+                    return prevLayers.map(layer => {
+                        // Direct match: layer directly in the moved group
+                        if (layer.path === oldPath) {
+                            return { ...layer, path: newPath };
+                        }
+                        
+                        // Hierarchical match: layer in subgroup of moved group
+                        if (layer.path.startsWith(`${oldPath}/`)) {
+                            const updatedPath = layer.path.replace(oldPath, newPath);
+                            return { ...layer, path: updatedPath };
+                        }
+                        
+                        return layer;
+                    });
+                });
+            }, 0);
+            
+            // Return early since we've handled the GROUP drag type
+            return;
+        }
+        
+        // ENTITY drag handling (unchanged)
         if (type === 'ENTITY') {
             const srcStr = source.droppableId.replace('entities-', '');
             const dstStr = destination.droppableId.replace('entities-', '');
@@ -557,9 +876,7 @@ function App() {
             return;
         }
 
-        if (source.droppableId === destination.droppableId && source.index === destination.index) return;
-
-        // update state via functional update; persistence in useEffect
+        // LAYER drag handling (unchanged)
         setLayers(prevLayers => {
             const newLayers = Array.from(prevLayers);
             const id = !isNaN(Number(draggableId)) ? Number(draggableId) : draggableId;
@@ -632,6 +949,7 @@ function App() {
                                 onAddGroup={handleAddGroup}
                                 onRenameGroup={handleRenameGroup}
                                 onRemoveGroup={handleRemoveGroup}
+                                onMoveGroup={handleMoveGroup}
                                 layers={layers}
                                 onAddLayer={addNewLayer}
                                 onRemoveLayer={handleRemoveLayer}
@@ -669,6 +987,62 @@ function App() {
                         hoveredLayerId={hoveredLayerId}
                     />
                 </div>
+                
+                {/* Group Move Dialog */}
+                {moveGroupDialogOpen && (
+                    <div className="modal d-block" tabIndex="-1" role="dialog">
+                        <div className="modal-dialog" role="document">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">Move Group</h5>
+                                    <button type="button" className="btn-close" onClick={() => setMoveGroupDialogOpen(false)}></button>
+                                </div>
+                                <div className="modal-body">
+                                    <p>Select where to move <strong>{groupToMove?.name}</strong>:</p>
+                                    <select 
+                                        className="form-select" 
+                                        value={selectedDestination} 
+                                        onChange={(e) => setSelectedDestination(e.target.value)}
+                                    >
+                                        <option value="">Root Level</option>
+                                        {/* Recursively render group options */}
+                                        {(() => {
+                                            const renderOptions = (groups, level = 0) => {
+                                                return groups.flatMap(g => {
+                                                    // Skip the group being moved and its subgroups
+                                                    if (groupToMove && (g.path === groupToMove.path || g.path.startsWith(`${groupToMove.path}/`))) {
+                                                        return [];
+                                                    }
+                                                    
+                                                    // Create an option for this group
+                                                    const indent = '⎯'.repeat(level);
+                                                    const option = (
+                                                        <option key={g.path} value={g.path}>
+                                                            {level ? indent + ' ' : ''}{g.name}
+                                                        </option>
+                                                    );
+                                                    
+                                                    // Include options for subgroups if any
+                                                    if (g.subgroups?.length) {
+                                                        return [option, ...renderOptions(g.subgroups, level + 1)];
+                                                    }
+                                                    
+                                                    return option;
+                                                });
+                                            };
+                                            
+                                            return renderOptions(groups);
+                                        })()} 
+                                    </select>
+                                </div>
+                                <div className="modal-footer">
+                                    <button type="button" className="btn btn-secondary" onClick={() => setMoveGroupDialogOpen(false)}>Cancel</button>
+                                    <button type="button" className="btn btn-primary" onClick={executeGroupMove}>Move</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
