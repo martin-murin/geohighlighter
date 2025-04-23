@@ -53,7 +53,7 @@ const fetchDataForEntity = async (type, entity) => {
 };
 
 // MapLayer component
-const MapLayer = ({ layerId, features, polygonsVisible, markersVisible, onEntityError, fillColor, borderColor, onUpdateEntityName, onUpdateGeometry }) => {
+const MapLayer = ({ layerId, features, polygonsVisible, markersVisible, onEntityError, fillColor, borderColor, borderWidth, borderStyle, onUpdateEntityName, onUpdateGeometry }) => {
     const map = useMap();
     const entities = features; // alias for backward compatibility
     const layersRef = useRef({});
@@ -92,10 +92,12 @@ const MapLayer = ({ layerId, features, polygonsVisible, markersVisible, onEntity
             const layer = layersRef.current[entity].layer;
             const marker = layersRef.current[entity].marker;
 
-            // Update the polygon border color
+            // Update the polygon border color and style
             layer.setStyle({
                 color: borderColor.hex,
                 opacity: borderColor.rgb.a,
+                weight: borderWidth,
+                dashArray: borderStyle === 'dashed' ? '6 4' : borderStyle === 'dotted' ? '1 4' : ''
             });
 
             // Update the marker color by changing the inline style of the icon
@@ -117,13 +119,16 @@ const MapLayer = ({ layerId, features, polygonsVisible, markersVisible, onEntity
             const { id, geometry, properties } = entity;
             if (geometry && !layersRef.current[id]) {
                 const featColl = { type: 'FeatureCollection', features: [entity] };
+                // apply dynamic weight and dashArray
+                const dashArr = borderStyle === 'dashed' ? '6 4' : borderStyle === 'dotted' ? '1 4' : '';
                 const geoJsonLayer = L.geoJson(featColl, {
                     style: {
                         fillColor: fillColor.hex,
                         fillOpacity: fillColor.rgb.a,
                         color: borderColor.hex,
                         opacity: borderColor.rgb.a,
-                        weight: 2,
+                        weight: borderWidth,
+                        dashArray: dashArr
                     }
                 });
                 let marker = null;
@@ -196,13 +201,16 @@ const MapLayer = ({ layerId, features, polygonsVisible, markersVisible, onEntity
                                     return;
                                 }
 
+                                // apply dynamic weight and dashArray on fetched polygons
+                                const dashArr2 = borderStyle === 'dashed' ? '6 4' : borderStyle === 'dotted' ? '1 4' : '';
                                 const geoJsonLayer = L.geoJson(data_polygon, {
                                     style: {
                                         fillColor: fillColor.hex,
                                         fillOpacity: fillColor.rgb.a,
                                         color: borderColor.hex,
                                         opacity: borderColor.rgb.a,
-                                        weight: 2,
+                                        weight: borderWidth,
+                                        dashArray: dashArr2
                                     }
                                 });
 
@@ -282,6 +290,10 @@ const MapLayer = ({ layerId, features, polygonsVisible, markersVisible, onEntity
     useEffect(() => {
         updateLayerBorderColors(); // Update layer colors when color changes
     }, [borderColor]);
+
+    useEffect(() => {
+        updateLayerBorderColors(); // Update layer border colors when border width/style changes
+    }, [borderWidth, borderStyle]);
 
     useEffect(() => {
         if (warning) {

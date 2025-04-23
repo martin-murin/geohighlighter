@@ -45,12 +45,19 @@ const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName, handl
                             }}
                             style={() => {
                                 const isHovered = layer.id === hoveredLayerId;
+                                const weight = isHovered ? layer.borderWidth + 1 : layer.borderWidth;
+                                const dashArray = layer.borderStyle === 'dashed'
+                                    ? '6 4'
+                                    : layer.borderStyle === 'dotted'
+                                        ? '1 4'
+                                        : '';
                                 return {
                                     fillColor: isHovered ? lightenColor(layer.fillColor.hex, 0.3) : layer.fillColor.hex,
                                     fillOpacity: Math.min(1, layer.fillColor.rgb.a + (isHovered ? 0.3 : 0)),
                                     color: isHovered ? lightenColor(layer.borderColor.hex, 0.3) : layer.borderColor.hex,
                                     opacity: Math.min(1, layer.borderColor.rgb.a + (isHovered ? 0.3 : 0)),
-                                    weight: isHovered ? 3 : 2,
+                                    weight,
+                                    dashArray,
                                 };
                             }}
                             filter={feature =>
@@ -108,6 +115,8 @@ const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName, handl
                         onEntityError={handleEntityError}
                         fillColor={layer.fillColor}
                         borderColor={layer.borderColor}
+                        borderWidth={layer.borderWidth}
+                        borderStyle={layer.borderStyle}
                         onUpdateEntityName={handleUpdateEntityName}
                         onUpdateGeometry={handleGeometryUpdate}
                         hoveredLayerId={hoveredLayerId}

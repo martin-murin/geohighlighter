@@ -25,7 +25,9 @@ const GroupView = ({
   hoveredLayerId,
   onHoverLayer,
   onEntityReorder,
-  onSortEntities
+  onSortEntities,
+  onBorderWidthChange,
+  onBorderStyleChange
 }) => {
   // filter layers belonging to this group
   const groupLayers = layers.filter(l => l.path === group.path);
@@ -85,6 +87,8 @@ const GroupView = ({
               onHoverLayer={onHoverLayer}
               onEntityReorder={onEntityReorder}
               onSortEntities={onSortEntities}
+              onBorderWidthChange={onBorderWidthChange}
+              onBorderStyleChange={onBorderStyleChange}
             />
           ))}
           <Droppable droppableId={group.path || 'root'} type="LAYER">
@@ -116,6 +120,8 @@ const GroupView = ({
                           onHoverLayer={onHoverLayer}
                           onEntityReorder={onEntityReorder}
                           onSortEntities={onSortEntities}
+                          onBorderWidthChange={onBorderWidthChange}
+                          onBorderStyleChange={onBorderStyleChange}
                           dragHandleProps={provided2.dragHandleProps} // only title handles layer drag
                         />
                       </div>

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useReducer } from 'react';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import './LayerControls.css';
-import { Dropdown } from 'react-bootstrap';
+import { Dropdown, Form } from 'react-bootstrap';
 import ColorPicker from './ColorPicker';
 import IconPicker from './IconPicker';
 
-const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onMarkerIconChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer, dragHandleProps, onSortEntities }) => {
+const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onMarkerIconChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer, dragHandleProps, onSortEntities, onBorderWidthChange, onBorderStyleChange }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -106,10 +106,18 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
                             {layer.markersVisible ? <><i className="bi bi-geo-alt-fill me-2" /> Hide Markers</> : <><i className="bi bi-geo-alt me-2" /> Show Markers</>}
                         </Dropdown.Item>
                         <Dropdown.Divider />
-                        <Dropdown.Header>Marker Icon</Dropdown.Header>
+                        <Dropdown.Header>Marker & Boundary Style</Dropdown.Header>
                         <Dropdown.ItemText>
-                            <div className="px-2">
+                            <div className="d-flex align-items-center px-2">
                                 <IconPicker currentIcon={layer.markerIcon} onSelect={icon => onMarkerIconChange(layer.id, icon)} />
+                                <div className="ms-3 d-flex align-items-center">
+                                    <Form.Select size="sm" style={{ width: '5rem', fontFamily: 'monospace' }} value={layer.borderStyle} onChange={e => onBorderStyleChange(layer.id, e.target.value)}>
+                                        <option value="solid">———</option>
+                                        <option value="dashed">---</option>
+                                        <option value="dotted">...</option>
+                                    </Form.Select>
+                                    <Form.Control type="number" size="sm" min="1" className="ms-2" style={{ width: '3rem' }} value={layer.borderWidth} onChange={e => onBorderWidthChange(layer.id, parseInt(e.target.value, 10) || 1)} />
+                                </div>
                             </div>
                         </Dropdown.ItemText>
                         <Dropdown.Divider />

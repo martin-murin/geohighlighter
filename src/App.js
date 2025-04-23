@@ -13,6 +13,8 @@ import hash from 'object-hash';
 const normalizeLayers = (layersArr) => layersArr.map(layer => ({
     ...layer,
     markerIcon: layer.markerIcon || 'bi bi-geo-alt-fill',
+    borderWidth: layer.borderWidth ?? 2,
+    borderStyle: layer.borderStyle || 'solid',
     // ensure every layer has a path (default to root)
     path: layer.path || '',
     featureCollection: {
@@ -257,8 +259,10 @@ function App() {
             polygonsVisible: true,
             markersVisible: true,
             markerIcon: 'bi bi-geo-alt-fill',
-            fillColor: {rgb: { r: 0, g: 0, b: 0, a: 0.2,}, hex: "#000000"} ,
-            borderColor: {rgb: { r: 0, g: 0, b: 0, a: 0.8,}, hex: "#000000"} ,
+            fillColor: {rgb: { r: 0, g: 0, b: 0, a: 0.2 }, hex: "#000000"},
+            borderColor: {rgb: { r: 0, g: 0, b: 0, a: 0.8 }, hex: "#000000"},
+            borderWidth: 2,
+            borderStyle: 'solid',
         };
         setLayers([...layers, newLayer]);
     };
@@ -328,6 +332,18 @@ function App() {
                 layer.id === layerId ? { ...layer, borderColor } : layer
             )
         );
+    };
+
+    const handleBorderWidthChange = (layerId, borderWidth) => {
+        setLayers(prevLayers => prevLayers.map(layer =>
+            layer.id === layerId ? { ...layer, borderWidth } : layer
+        ));
+    };
+
+    const handleBorderStyleChange = (layerId, borderStyle) => {
+        setLayers(prevLayers => prevLayers.map(layer =>
+            layer.id === layerId ? { ...layer, borderStyle } : layer
+        ));
     };
 
     const handleMarkerIconChange = (layerId, markerIcon) => {
@@ -604,6 +620,8 @@ function App() {
                                 onToggleMarkerVisibility={toggleMarkerVisibility}
                                 onFillColorChange={handleFillColorChange}
                                 onBorderColorChange={handleBorderColorChange}
+                                onBorderWidthChange={handleBorderWidthChange}
+                                onBorderStyleChange={handleBorderStyleChange}
                                 onMarkerIconChange={handleMarkerIconChange}
                                 onFileImport={handleFileImport}
                                 onUpdateEntityName={handleUpdateEntityName}

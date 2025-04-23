@@ -2,7 +2,7 @@ import React from 'react';
 import { DragDropContext } from 'react-beautiful-dnd';
 import GroupView from './GroupView';
 
-const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onAddLayer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onMarkerIconChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer, onDragEnd, onEntityReorder, onSortEntities }) => {
+const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onAddLayer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onMarkerIconChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer, onDragEnd, onEntityReorder, onSortEntities, onBorderWidthChange, onBorderStyleChange }) => {
     return (
         <DragDropContext onDragEnd={onDragEnd} getContainerForClone={() => document.body}>
             <div className="row">
@@ -32,6 +32,8 @@ const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onA
                             onHoverLayer={onHoverLayer}
                             onEntityReorder={onEntityReorder}
                             onSortEntities={onSortEntities}
+                            onBorderWidthChange={onBorderWidthChange}
+                            onBorderStyleChange={onBorderStyleChange}
                         />
                     ))}
                 </div>
