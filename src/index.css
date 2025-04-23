@@ -11,3 +11,27 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+:root {
+  --primary-color: #2D527C;
+  --secondary-color: #CDE6F8;
+}
+
+.app-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.app-logo {
+  width: 2rem;
+  height: auto;
+}
+.app-title h2 {
+  color: var(--primary-color);
+  margin: 0;
+}
+
+.sidebar {
+  padding: 1rem;
+}

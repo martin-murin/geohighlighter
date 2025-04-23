@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import Sidebar from './components/Sidebar';
@@ -488,6 +488,7 @@ function App() {
     const handleRenameLayer = (layerId, newName) => setLayers(prev => prev.map(l => l.id === layerId ? { ...l, name: newName } : l));
 
     const handleDragEnd = (result) => {
+        console.log('Drag ended:', result);
         const { source, destination, draggableId, type } = result;
         if (!destination) return;
         // entity drag: allow same-layer reorder or cross-layer move
@@ -495,7 +496,7 @@ function App() {
             const srcStr = source.droppableId.replace('entities-', '');
             const dstStr = destination.droppableId.replace('entities-', '');
             const srcId = !isNaN(Number(srcStr)) ? Number(srcStr) : srcStr;
-            const dstId = !isNaN(Number(dstStr)) ? Number(dstStr) : dstId;
+            const dstId = !isNaN(Number(dstStr)) ? Number(dstStr) : dstStr;
             if (srcId === dstId) {
                 handleEntityReorder(srcId, result);
             } else {
@@ -574,16 +575,17 @@ function App() {
             <div className="row">
                 {sidebarOpen && (
                     <div className="col-md-3 col-12 px-3 mt-4">
-                        <div className="text-center mb-3">
-                            <h2>Map Highlighter</h2>
-                            <div className="row">
-                                <div className="col-6 mt-2 mb-2">
-                                    <button className="btn btn-primary w-100" onClick={handleExport}>Export Layers</button>
-                                </div>
-                                <div className="col-6 mt-2 mb-2">
-                                    <label className="btn btn-primary w-100" htmlFor="import-file">Import Layers</label>
-                                    <input id="import-file" type="file" onChange={handleImport} accept=".json" className="d-none" />
-                                </div>
+                        <div className="text-center mb-3 app-title">
+                            <img src={process.env.PUBLIC_URL + '/geohighlighter.svg'} alt="GeoHighlighter logo" className="app-logo" />
+                            <h2>GeoHighlighter</h2>
+                        </div>
+                        <div className="row mb-3">
+                            <div className="col-6 px-1 mb-2">
+                                <button className="btn btn-primary w-100" onClick={handleExport}>Export</button>
+                            </div>
+                            <div className="col-6 px-1 mb-2">
+                                <label className="btn btn-primary w-100" htmlFor="import-file">Import</label>
+                                <input id="import-file" type="file" onChange={handleImport} accept=".json" className="d-none" />
                             </div>
                         </div>
                         <div className="scrollable px-2">
@@ -615,7 +617,6 @@ function App() {
                         </div>
                     </div>
                 )}
-                {/* Desktop toggle */}
                 <div className="col-auto d-none d-md-flex align-items-center justify-content-center" onClick={toggleSidebar} style={{ cursor: 'pointer' }} aria-label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}>
                     <i className={`bi bi-chevron-${sidebarOpen ? 'left' : 'right'}`}></i>
                 </div>
