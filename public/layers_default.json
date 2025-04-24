@@ -571,7 +571,7 @@
       "markerIcon": "bi bi-geo-alt-fill",
       "borderWidth": 1,
       "borderStyle": "solid",
-      "path": "",
+      "path": "Group 1",
       "simplification": {
         "useAdaptive": true,
         "roundCoordinates": true,
@@ -3054,7 +3054,7 @@
       "markerIcon": "bi bi-geo-alt-fill",
       "borderWidth": 2,
       "borderStyle": "solid",
-      "path": "",
+      "path": "Group 1",
       "simplification": {
         "useAdaptive": true,
         "roundCoordinates": true,
@@ -3066,8 +3066,8 @@
   "groups": [
     {
       "id": "f79079da-2de6-48be-8258-8bc1a2e160b8",
-      "name": "Root",
-      "path": "",
+      "name": "Group 1",
+      "path": "Group 1",
       "subgroups": []
     }
   ]

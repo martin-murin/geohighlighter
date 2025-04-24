@@ -312,9 +312,6 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
                         </Dropdown.Item>
                         <Dropdown.Divider />
                         <Dropdown.Header>Marker & Boundary Style</Dropdown.Header>
-                        <Dropdown.Item onClick={() => onMarkerIconChange(layer.id, 'default')}>
-                          <i className="bi bi-geo-alt me-2" />Default Marker
-                        </Dropdown.Item>
                         <Dropdown.ItemText>
                             <div className="d-flex align-items-center px-2">
                                 <IconPicker currentIcon={layer.markerIcon} onSelect={icon => onMarkerIconChange(layer.id, icon)} />
@@ -435,7 +432,17 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
 
             <Droppable droppableId={`entities-${layer.id}`} type="ENTITY">
                 {(provided) => (
-                  <ul className="list-group" ref={provided.innerRef} {...provided.droppableProps}>
+                  <ul
+                    className="list-group"
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    style={{ minHeight: '4rem', padding: '0.25rem' }}
+                  >
+                    {featuresList.length === 0 && (
+                      <li className="list-group-item text-muted text-center">
+                        Drop entities here
+                      </li>
+                    )}
                     {featuresList.map((feature, index) => (
                       <Draggable key={feature.id} draggableId={String(feature.id)} index={index}>
                         {(provided2) => (
