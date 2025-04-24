@@ -2,7 +2,7 @@ import React from 'react';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import GroupView from './GroupView';
 
-const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onMoveGroup, onAddLayer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onMarkerIconChange, onFileImport, onUpdateEntityName, onRenameLayer, hoveredLayerId, onHoverLayer, onDragEnd, onEntityReorder, onSortEntities, onBorderWidthChange, onBorderStyleChange }) => {
+const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onMoveGroup, onAddLayer, onAddEntity, onRemoveEntity, onTogglePolygonVisibility, onToggleMarkerVisibility, onRemoveLayer, onForceRender, onFillColorChange, onBorderColorChange, onMarkerIconChange, onFileImport, onUpdateEntityName, onRenameLayer, onUpdateLayerSettings, hoveredLayerId, onHoverLayer, onDragEnd, onEntityReorder, onSortEntities, onBorderWidthChange, onBorderStyleChange }) => {
     return (
         <DragDropContext onDragEnd={onDragEnd} getContainerForClone={() => document.body}>
             <div className="row">
@@ -38,6 +38,7 @@ const Sidebar = ({ groups, layers, onAddGroup, onRenameGroup, onRemoveGroup, onM
                                         onFileImport={onFileImport}
                                         onUpdateEntityName={onUpdateEntityName}
                                         onRenameLayer={onRenameLayer}
+                                        onUpdateLayerSettings={onUpdateLayerSettings}
                                         hoveredLayerId={hoveredLayerId}
                                         onHoverLayer={onHoverLayer}
                                         onEntityReorder={onEntityReorder}

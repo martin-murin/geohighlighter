@@ -86,9 +86,25 @@ function App() {
             try {
                 const response = await fetch(`${process.env.PUBLIC_URL}/layers_default.json`);
                 let defaultData = await response.json();
-                defaultData = normalizeLayers(defaultData);
-                setLayers(defaultData);
-                await set('layers', defaultData);
+                
+                // Handle both formats: array of layers or {layers, groups} object
+                if (defaultData.layers && Array.isArray(defaultData.layers)) {
+                    // If it's in the {layers, groups} format (like exported files)
+                    const normalizedLayers = normalizeLayers(defaultData.layers);
+                    setLayers(normalizedLayers);
+                    
+                    // Store the groups from default file for loadGroups to use
+                    if (defaultData.groups && Array.isArray(defaultData.groups)) {
+                        await set('groups', defaultData.groups);
+                    }
+                    
+                    await set('layers', normalizedLayers);
+                } else if (Array.isArray(defaultData)) {
+                    // Legacy format: just an array of layers
+                    const normalizedLayers = normalizeLayers(defaultData);
+                    setLayers(normalizedLayers);
+                    await set('layers', normalizedLayers);
+                }
             } catch (error) {
                 console.error('Error loading default layers:', error);
             }
@@ -100,8 +116,14 @@ function App() {
         const loadGroups = async () => {
             try {
                 const stored = await get('groups');
-                if (Array.isArray(stored) && stored.length) setGroups(stored);
-                else setGroups([{ id: uuidv4(), name: 'Root', path: '', subgroups: [] }]);
+                if (Array.isArray(stored) && stored.length) {
+                    console.log('loadGroups: loading from storage', stored);
+                    setGroups(stored);
+                }
+                else {
+                    console.log('loadGroups: creating default Root group');
+                    setGroups([{ id: uuidv4(), name: 'Root', path: '', subgroups: [] }]);
+                }
             } catch (e) {
                 console.error('Load groups error', e);
                 setGroups([{ id: uuidv4(), name: 'Root', path: '', subgroups: [] }]);
@@ -267,6 +289,12 @@ function App() {
             borderColor: {rgb: { r: 0, g: 0, b: 0, a: 0.8 }, hex: "#000000"},
             borderWidth: 2,
             borderStyle: 'solid',
+            simplification: {
+                multiplier: 1.0,
+                useAdaptive: true,
+                roundCoordinates: true,
+                roundingDecimals: 5
+            }
         };
         setLayers([...layers, newLayer]);
     };
@@ -529,6 +557,11 @@ function App() {
 
     const handleRenameLayer = (layerId, newName) => setLayers(prev => prev.map(l => l.id === layerId ? { ...l, name: newName } : l));
     
+    // Update layer settings (e.g., simplification)
+    const handleUpdateLayerSettings = (updatedLayer) => {
+        setLayers(prev => prev.map(l => l.id === updatedLayer.id ? updatedLayer : l));
+    };
+
     // Handle moving a group to a new parent
     const handleMoveGroup = (group) => {
         setGroupToMove(group);
@@ -554,9 +587,7 @@ function App() {
             if (path === '') return groups; // Root level
             
             for (const g of groups) {
-                if (g.path === path) {
-                    return g.subgroups || [];
-                }
+                if (g.path === path) return g.subgroups || [];
                 if (g.subgroups?.length > 0) {
                     const found = findGroupsByPath(g.subgroups, path);
                     if (found !== null) return found;
@@ -966,6 +997,7 @@ function App() {
                                 onFileImport={handleFileImport}
                                 onUpdateEntityName={handleUpdateEntityName}
                                 onRenameLayer={handleRenameLayer}
+                                onUpdateLayerSettings={handleUpdateLayerSettings}
                                 hoveredLayerId={hoveredLayerId}
                                 onHoverLayer={handleHoverLayer}
                                 onEntityReorder={handleEntityReorder}

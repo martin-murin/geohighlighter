@@ -34,7 +34,7 @@ const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName, handl
                 );
                 if (allHaveGeom) {
                     return (
-                        <>
+                        <React.Fragment key={`layer-fragment-${layer.id}`}>
                         <GeoJSON
                             key={`${layer.id}-${layer.markerIcon}-${(layer.featureCollection?.features || []).length}-${layer.markersVisible}-${layer.polygonsVisible}`}
                             data={{
@@ -102,7 +102,7 @@ const MapComponent = ({ layers, handleEntityError, handleUpdateEntityName, handl
                                 </Marker>
                             );
                         })}
-                        </>
+                        </React.Fragment>
                     );
                 }
                 return (

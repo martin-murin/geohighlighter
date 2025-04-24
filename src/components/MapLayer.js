@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
 import simplify from '@turf/simplify';
 import L from 'leaflet';
+import { calculateTolerance, maybeRoundCoordinates } from '../config/simplificationConfig';
 import './MapLayer.css'
 
 // Debounce function to delay updates
@@ -16,6 +17,37 @@ function debounce(fn, delay) {
         }, delay);
     };
 }
+
+// Function to get the bounding box of a geometry
+const getBoundingBox = (geometry) => {
+    if (!geometry || !geometry.coordinates || !geometry.coordinates.length) return null;
+    
+    let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
+    
+    const processCoordinates = (coords) => {
+        if (!Array.isArray(coords)) return;
+        
+        // If this is a coordinate pair [lon, lat]
+        if (coords.length === 2 && typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+            const [lon, lat] = coords;
+            minLat = Math.min(minLat, lat);
+            maxLat = Math.max(maxLat, lat);
+            minLon = Math.min(minLon, lon);
+            maxLon = Math.max(maxLon, lon);
+        } else {
+            // Otherwise, it's a nested array, process each item
+            coords.forEach(c => processCoordinates(c));
+        }
+    };
+    
+    processCoordinates(geometry.coordinates);
+    
+    if (minLat === Infinity || maxLat === -Infinity || minLon === Infinity || maxLon === -Infinity) {
+        return null;
+    }
+    
+    return { minLat, maxLat, minLon, maxLon };
+};
 
 // Function to generate the API URL
 const generateUrl = (type, entity) => {
@@ -182,9 +214,27 @@ const MapLayer = ({ layerId, features, polygonsVisible, markersVisible, onEntity
                         if (!layersRef.current[id]) {
                             let { data: data_polygon, name: fetchedName } = result_polygon;
                             // simplify fetched polygon
+                            // Adaptively simplify based on the size of the feature
                             data_polygon = {
                                 ...data_polygon,
-                                features: data_polygon.features.map(f => simplify(f, { tolerance: 0.001, highQuality: false }))
+                                features: data_polygon.features.map(f => {
+                                    // Calculate appropriate tolerance based on feature size
+                                    let tolerance = 0.02; // Fallback default
+                                    if (f.geometry && f.geometry.coordinates) {
+                                        const bbox = getBoundingBox(f.geometry);
+                                        if (bbox) {
+                                            const area = (bbox.maxLon - bbox.minLon) * (bbox.maxLat - bbox.minLat);
+                                            // Use the centralized configuration for tolerance calculation
+                                            tolerance = calculateTolerance(area);
+                                            console.log('Area:', area, 'Tolerance:', tolerance);
+                                        }
+                                    }
+                                    // Apply simplification and coordinate rounding
+                                    const simplified = simplify(f, { tolerance, highQuality: false });
+                                    // Round coordinates to reduce precision if enabled
+                                    simplified.geometry = maybeRoundCoordinates(simplified.geometry);
+                                    return simplified;
+                                })
                             };
                             const { data: data_point } = result_point;
                             const pointCoordinates = data_point?.features?.[0]?.geometry?.type === 'Point'

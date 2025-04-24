@@ -24,6 +24,7 @@ const GroupView = ({
   onFileImport,
   onUpdateEntityName,
   onRenameLayer,
+  onUpdateLayerSettings,
   hoveredLayerId,
   onHoverLayer,
   onEntityReorder,
@@ -91,6 +92,7 @@ const GroupView = ({
               onFileImport={onFileImport}
               onUpdateEntityName={onUpdateEntityName}
               onRenameLayer={onRenameLayer}
+              onUpdateLayerSettings={onUpdateLayerSettings}
               hoveredLayerId={hoveredLayerId}
               onHoverLayer={onHoverLayer}
               onEntityReorder={onEntityReorder}
@@ -124,6 +126,7 @@ const GroupView = ({
                           onFileImport={onFileImport}
                           onUpdateEntityName={onUpdateEntityName}
                           onRenameLayer={onRenameLayer}
+                          onUpdateLayerSettings={onUpdateLayerSettings}
                           hoveredLayerId={hoveredLayerId}
                           onHoverLayer={onHoverLayer}
                           onEntityReorder={onEntityReorder}
