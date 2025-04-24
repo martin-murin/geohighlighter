@@ -571,7 +571,7 @@
       "markerIcon": "bi bi-geo-alt-fill",
       "borderWidth": 1,
       "borderStyle": "solid",
-      "path": "Root",
+      "path": "",
       "simplification": {
         "useAdaptive": true,
         "roundCoordinates": true,
@@ -2994,7 +2994,7 @@
               ]
             },
             "properties": {
-              "name": "Danube, Serbia",
+              "name": "Danube",
               "notes": "",
               "source": "osm",
               "osm_type": "relation",
@@ -3054,7 +3054,7 @@
       "markerIcon": "bi bi-geo-alt-fill",
       "borderWidth": 2,
       "borderStyle": "solid",
-      "path": "Root",
+      "path": "",
       "simplification": {
         "useAdaptive": true,
         "roundCoordinates": true,
@@ -3067,7 +3067,7 @@
     {
       "id": "15801169-c85b-48b0-b091-fdd7b0889dac",
       "name": "Root",
-      "path": "Root",
+      "path": "",
       "subgroups": []
     }
   ]
