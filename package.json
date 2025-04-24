@@ -1,8 +1,8 @@
 {
-  "name": "osm-region-highlighter",
+  "name": "geohighlighter",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://martin-murin.github.io/osm-region-highlighter",
+  "homepage": "https://martin-murin.github.io/geohighlighter",
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
     "@testing-library/jest-dom": "^5.17.0",
