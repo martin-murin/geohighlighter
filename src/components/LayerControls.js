@@ -126,8 +126,8 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
             if (!data.length) throw new Error('No geometry data');
             let geojson = data[0].geojson;
             
-            // Apply simplification to the geometry before adding to the layer
-            if (geojson && geojson.type) {
+            // Apply simplification to the geometry before adding to the layer (skip if maximum precision)
+            if (geojson && geojson.type && precision !== '0.1') {
                 // Create a GeoJSON feature from the geometry
                 const feature = {
                     type: 'Feature',
@@ -224,7 +224,7 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
         
         // Process entities with delay between requests to respect Nominatim rate limits
         function processNextEntity(index) {
-
+            if (index >= osmEntities.length) return;
             const entity = osmEntities[index];
             const osmType = entity.properties.osm_type;
             const osmId = entity.properties.osm_id;
@@ -245,20 +245,20 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
                     
                     let geojson = data[0].geojson;
 
-                    // Apply simplification to re-fetched geometry
-                    if (geojson && geojson.type) {
+                    // Apply simplification to re-fetched geometry (skip if maximum precision)
+                    const refetchMultiplier = parseFloat(currentLayer.simplification?.multiplier) || 1.0;
+                    if (geojson && geojson.type && refetchMultiplier !== 0.1) {
                         const feature = { type: 'Feature', geometry: geojson, properties: {} };
-                        const multiplier = parseFloat(currentLayer.simplification?.multiplier) || 1.0;
                         const BASE_TOLERANCES = { veryLarge: 0.02, large: 0.01, medium: 0.005, small: 0.002 };
-                        let tolerance = BASE_TOLERANCES.medium * multiplier;
+                        let tolerance = BASE_TOLERANCES.medium * refetchMultiplier;
                         if (currentLayer.simplification?.useAdaptive !== false) {
                             const bbox = getBoundingBox(geojson);
                             if (bbox) {
                                 const area = (bbox.maxLon - bbox.minLon) * (bbox.maxLat - bbox.minLat);
-                                if (area > 100) tolerance = BASE_TOLERANCES.veryLarge * multiplier;
-                                else if (area > 10) tolerance = BASE_TOLERANCES.large * multiplier;
-                                else if (area > 1) tolerance = BASE_TOLERANCES.medium * multiplier;
-                                else tolerance = BASE_TOLERANCES.small * multiplier;
+                                if (area > 100) tolerance = BASE_TOLERANCES.veryLarge * refetchMultiplier;
+                                else if (area > 10) tolerance = BASE_TOLERANCES.large * refetchMultiplier;
+                                else if (area > 1) tolerance = BASE_TOLERANCES.medium * refetchMultiplier;
+                                else tolerance = BASE_TOLERANCES.small * refetchMultiplier;
                             }
                         }
                         const simplified = simplify(feature, { tolerance, highQuality: false });
@@ -366,7 +366,7 @@ const LayerControls = ({ layer, onAddEntity, onRemoveEntity, onTogglePolygonVisi
                                         handleRefetchEntities(updatedLayer);
                                     }}
                                 >
-                                    <option value="0.2">Maximum</option>
+                                    <option value="0.1">Maximum</option>
                                     <option value="0.5">High</option>
                                     <option value="1.0">Medium</option>
                                     <option value="2.0">Low</option>
