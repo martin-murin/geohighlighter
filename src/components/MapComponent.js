@@ -92,7 +92,7 @@ function ViewportGeoJSON({ featureCollection, layer, hoveredLayerId }) {
 
   return (
     <GeoJSON 
-      key={`geojson-${layer.id}-${hoveredLayerId}-${visibleFeatures.features.length}`}
+      key={`geojson-${layer.id}`}
       data={visibleFeatures}
       style={style}
       onEachFeature={(feature, layerInstance) => {
