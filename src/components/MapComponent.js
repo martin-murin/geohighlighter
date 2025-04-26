@@ -71,7 +71,7 @@ function ViewportGeoJSON({ featureCollection, layer, hoveredLayerId }) {
       map.off('moveend', updateVisibleFeatures);
       map.off('zoomend', updateVisibleFeatures);
     };
-  }, [map, featureCollection]);
+  }, [map, featureCollection, featureCollection.features.length]);
 
   // Create style for the GeoJSON layer
   const style = () => {
@@ -92,7 +92,7 @@ function ViewportGeoJSON({ featureCollection, layer, hoveredLayerId }) {
 
   return (
     <GeoJSON 
-      key={`geojson-${layer.id}`}
+      key={`geojson-${layer.id}-${visibleFeatures.features.length}`}
       data={visibleFeatures}
       style={style}
       onEachFeature={(feature, layerInstance) => {
