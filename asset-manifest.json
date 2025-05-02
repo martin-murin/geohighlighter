@@ -1,17 +1,17 @@
 {
   "files": {
-    "main.css": "/geohighlighter/static/css/main.233984c6.css",
-    "main.js": "/geohighlighter/static/js/main.a39eac88.js",
+    "main.css": "/geohighlighter/static/css/main.01653853.css",
+    "main.js": "/geohighlighter/static/js/main.36dfc523.js",
     "static/js/453.16ff000c.chunk.js": "/geohighlighter/static/js/453.16ff000c.chunk.js",
     "static/media/bootstrap-icons.woff?": "/geohighlighter/static/media/bootstrap-icons.39795c0b4513de014cf8.woff",
     "static/media/bootstrap-icons.woff2?": "/geohighlighter/static/media/bootstrap-icons.b7bcc075b395c14ce8c2.woff2",
     "index.html": "/geohighlighter/index.html",
-    "main.233984c6.css.map": "/geohighlighter/static/css/main.233984c6.css.map",
-    "main.a39eac88.js.map": "/geohighlighter/static/js/main.a39eac88.js.map",
+    "main.01653853.css.map": "/geohighlighter/static/css/main.01653853.css.map",
+    "main.36dfc523.js.map": "/geohighlighter/static/js/main.36dfc523.js.map",
     "453.16ff000c.chunk.js.map": "/geohighlighter/static/js/453.16ff000c.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.233984c6.css",
-    "static/js/main.a39eac88.js"
+    "static/css/main.01653853.css",
+    "static/js/main.36dfc523.js"
   ]
 }
